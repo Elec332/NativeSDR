@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 17)
-project(NativeSDR2 LANGUAGES CXX)
+project(NativeSDR LANGUAGES CXX)
 
 if(MSVC)
     set(CMAKE_GENERATOR_PLATFORM x64)
@@ -14,7 +14,7 @@ set(MODULES_INCLUDE ${CMAKE_BASE_FOLDER}/DefaultModule.cmake)
 add_subdirectory("main")
 add_subdirectory("core")
 add_subdirectory("module_manager")
-#add_subdirectory("graphics")
+add_subdirectory("graphics")
 add_subdirectory("testbase")
 
 #add_subdirectory("testmodule")

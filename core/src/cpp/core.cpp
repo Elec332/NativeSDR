@@ -3,19 +3,19 @@
 //
 
 #include <core.h>
-//#include <NativeSDRGraphics.h>
+#include <NativeSDRGraphics.h>
 #include <filesystem>
 #include <module/ModuleManager.h>
 #include <module/SDRModule.h>
 #include <iostream>
 
 static void handleModule(const ModulePointer& p) {
-    //NativeGraphics::setupGraphics();
+    NativeGraphics::setupGraphics();
     std::cout << "MOD" << std::endl;
     ModuleInstance* i = p->createModuleContainer();
     i->test();
     p->destroyModuleContainer(i);
-    //NativeGraphics::destroy();
+    NativeGraphics::destroy();
 }
 
 int startCore(int argc, char* argv[]) {

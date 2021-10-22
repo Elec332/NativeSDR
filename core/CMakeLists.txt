@@ -7,4 +7,4 @@ install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION /)
 
 target_link_libraries(NativeSDR_core PRIVATE ModuleManager)
 target_include_directories(${PROJECT_NAME} PUBLIC ../module_manager/src/public)
-#target_link_libraries(NativeSDR_core PRIVATE NativeSDR_graphics)
+target_link_libraries(NativeSDR_core PRIVATE NativeSDR_graphics)
