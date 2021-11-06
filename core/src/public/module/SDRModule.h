@@ -17,8 +17,6 @@ public:
 
     virtual void init(pipeline::node_manager* nodeManager) = 0;
 
-    virtual void test() = 0;
-
 };
 
 #endif //NATIVESDR_SDRMODULE_H

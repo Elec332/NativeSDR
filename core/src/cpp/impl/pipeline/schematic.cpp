@@ -15,16 +15,18 @@ class schematic_impl : public pipeline::schematic {
 public:
 
     explicit schematic_impl(pipeline::node_manager* nodeManager) : nodeManager(nodeManager) {
-        ctx = ax::NodeEditor::CreateEditor();
+        cfg = new ax::NodeEditor::Config();
+        cfg->SettingsFile = nullptr;
+        ctx = ax::NodeEditor::CreateEditor(cfg);
         linkHandler = newLinkHandler(this);
     }
 
     ~schematic_impl() {
         ax::NodeEditor::DestroyEditor(ctx);
+        delete cfg;
     }
 
-    bool canConnect(const wrapped_block& ab, const pipeline::block_connection_base& aOut, const wrapped_block& bb,
-                    const pipeline::block_connection_base& bIn) {
+    bool canConnect(const wrapped_block& ab, const pipeline::block_connection_base& aOut, const wrapped_block& bb, const pipeline::block_connection_base& bIn) {
         if (linkHandler->hasConnection(ab, aOut) && !aOut->canConnectMultiple()) {
             return false;
         }
@@ -73,7 +75,9 @@ public:
     bool deleteBlock(ax::NodeEditor::NodeId id) override {
         wrapped_block b = blocks[(size_t) id];
         linkHandler->deleteBlockLinks(b);
-        return blocks.erase((size_t) id);
+        bool ret = blocks.erase((size_t) id);
+        ax::NodeEditor::DeleteNode(id);
+        return ret;
     }
 
     pipeline::block_data getBlock(ax::NodeEditor::NodeId id) override {
@@ -100,7 +104,8 @@ public:
 
         if (oa && ob) {
             return false;
-        } else if (oa || ob) {
+        }
+        if (oa || ob) {
             if (oa) {
                 ob = bb->getInputPin(b);
                 if (!ob) {
@@ -148,6 +153,7 @@ private:
     std::shared_ptr<schematic_link_handler> linkHandler;
     pipeline::node_manager* nodeManager;
     size_t counter = 32;
+    ax::NodeEditor::Config* cfg;
     ax::NodeEditor::EditorContext* ctx;
     std::map<size_t, wrapped_block> blocks;
 
@@ -161,22 +167,33 @@ void pipeline::deleteSchematic(pipeline::schematic* schematic) {
     delete (schematic_impl*) schematic;
 }
 
-class test {
-
-    explicit test(int i) {
-    }
-
-};
-
 class schematic_link_handler_impl : public schematic_link_handler {
 
 public:
 
-    explicit schematic_link_handler_impl(pipeline::schematic* schematic) {
+    explicit schematic_link_handler_impl(pipeline::schematic* schematic) : schematic(schematic) {
     }
 
-    bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block& blockA, ax::NodeEditor::PinId pinB,
-                   wrapped_block& blockB) override {
+    block_connection* getConnection(ax::NodeEditor::PinId pin, bool input) {
+        auto id = (size_t) pin;
+        auto block = (wrapped_block_instance*) schematic->getBlock(id - (id % 32)).get();
+        if (!block) {
+            return nullptr;
+        }
+        pipeline::block_connection_base ret;
+        if (input) {
+            ret = block->getInputPin(id);
+        } else {
+            ret = block->getOutputPin(id);
+        }
+        if (ret) {
+            return (block_connection*) ret.get();
+        } else {
+            return nullptr;
+        }
+    }
+
+    bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block& blockA, ax::NodeEditor::PinId pinB, wrapped_block& blockB) override {
         if (linkCounter >= 0xFFFFFFFE) {
             throw std::exception("Link overflow!");
         }
@@ -187,6 +204,9 @@ public:
         links[id] = std::make_shared<pipeline::link_instance>(id, pinA, pinB);
         pinToLinks[(size_t) pinA].push_front(id);
         pinToLinks[(size_t) pinB].push_front(id);
+        auto output = ((block_connection*) blockA->getOutputPin(pinA).get());
+        output->initOutput(this, pinA);
+        ((block_connection*) blockB->getInputPin(pinB).get())->setObject(output);
         return true;
     }
 
@@ -196,8 +216,11 @@ public:
             pipeline::link l = links[id];
             pinToLinks[(size_t) l->startPin].remove(id);
             pinToLinks[(size_t) l->endPin].remove(id);
+            getConnection(l->endPin, true)->setObject(nullptr);
         }
-        return links.erase((size_t) id);
+        bool ret = links.erase((size_t) id);
+        ax::NodeEditor::DeleteLink(id);
+        return ret;
     }
 
     void deleteLinks(const wrapped_block& block, const pipeline::block::connection_list& list) {
@@ -210,12 +233,14 @@ public:
                         auto pin = (size_t) l->startPin;
                         if (id == pin) {
                             pinToLinks[(size_t) l->endPin].remove(id);
+                            getConnection(l->endPin, true)->setObject(nullptr);
                         } else {
                             pinToLinks[pin].remove(id);
                         }
                     }
                 }
                 links.erase(i);
+                ax::NodeEditor::DeleteLink(i);
             }
             pinToLinks.erase(id);
         }
@@ -236,11 +261,18 @@ public:
         }
     }
 
+    void onLinkValueChanged(ax::NodeEditor::PinId pin, const block_connection* newRef) override {
+        for (const auto& l: pinToLinks[(size_t) pin]) {
+            getConnection(links[l]->endPin, true)->setObject(newRef);
+        }
+    }
+
 private:
 
     std::map<size_t, std::list<size_t>> pinToLinks;
     std::map<size_t, pipeline::link> links;
 
+    pipeline::schematic* schematic;
     size_t linkCounter = LINK_COUNTER_START;
 
 };

@@ -7,17 +7,32 @@
 
 #include <NativeSDRGraphics.h>
 #include <util/object_type.h>
+#include <nativesdr_core_export.h>
 #include <list>
 #include <utility>
 #include <memory>
+#include <iostream>
 
 #define MAX_BLOCK_PINS 31
 
 namespace pipeline {
 
+    class block_connection_base_instance;
+
+    typedef std::shared_ptr<block_connection_base_instance> block_connection_base;
+
+    typedef std::function<void()> connection_callback;
+
     class block_connection_base_instance {
 
+        NATIVESDR_CORE_EXPORT static pipeline::block_connection_base createBlockConnectionImpl(const std::string& name, const utils::object_type_base* type, void*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id);
+
     public:
+
+        template<class T>
+        static block_connection_base createBlockConnection(const std::string& name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id) {
+            return createBlockConnectionImpl(name, type, (void*&) object, callback, multi, id);
+        }
 
         [[nodiscard]] virtual std::string getName() const = 0;
 
@@ -27,16 +42,9 @@ namespace pipeline {
 
         [[nodiscard]] virtual bool canConnectMultiple() const = 0;
 
+        virtual void onValueChanged() const = 0;
+
     };
-
-    typedef std::shared_ptr<block_connection_base_instance> block_connection_base;
-
-    template<class T>
-    class block_connection;
-
-    class block;
-
-    typedef std::shared_ptr<block> block_ptr;
 
     class block {
 
@@ -73,23 +81,27 @@ namespace pipeline {
     protected:
 
         template<class T>
-        void addInput(std::string name, const utils::object_type<T>* type, T*& object, bool multi) {
-            addInput(name, type, object, multi, pinCounter++);
+        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id) {
+            inputs.push_front(pipeline::block_connection_base_instance::createBlockConnection(name, type, object, callback, multi, id));
         }
 
         template<class T>
-        void addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi) {
-            addOutput(name, type, object, multi, pinCounter++);
+        connection_callback addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) {
+            block_connection_base conn = pipeline::block_connection_base_instance::createBlockConnection(name, type, object, nullptr, multi, id);
+            outputs.push_front(conn);
+            return [conn]() {
+                conn->onValueChanged();
+            };
         }
 
         template<class T>
-        void addInput(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) {
-            inputs.push_front(std::make_shared<pipeline::block_connection<T>>(name, type, object, multi, id));
+        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi) {
+            addInput(name, type, object, callback, multi, pinCounter++);
         }
 
         template<class T>
-        void addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) {
-            outputs.push_front(std::make_shared<pipeline::block_connection<T>>(name, type, object, multi, id));
+        connection_callback addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi) {
+            return addOutput(name, type, object, multi, pinCounter++);
         }
 
     private:
@@ -101,51 +113,7 @@ namespace pipeline {
 
     };
 
-    template<class T>
-    class block_connection : public block_connection_base_instance {
-
-    public:
-
-        block_connection(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) :
-                name(std::move(name)),
-                obj(object),
-                type(type),
-                multi(multi),
-                id(id) {
-            if (id < 1 || id > MAX_BLOCK_PINS) {
-                throw std::exception("Max pins exceeded");
-            }
-        }
-
-        [[nodiscard]] const utils::object_type<T>* getType() const override {
-            return type;
-        }
-
-        [[nodiscard]] std::string getName() const override {
-            return name;
-        }
-
-        [[nodiscard]] uint8_t getId() const override {
-            return id;
-        }
-
-        [[nodiscard]] bool canConnectMultiple() const override {
-            return multi;
-        }
-
-        void setObject(T* object) const {
-            obj = object;
-        }
-
-    private:
-
-        const uint8_t id;
-        T*& obj;
-        const utils::object_type<T>* type;
-        const std::string name;
-        const bool multi;
-
-    };
+    typedef std::shared_ptr<block> block_ptr;
 
 }
 

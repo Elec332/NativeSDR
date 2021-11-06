@@ -31,7 +31,9 @@ class testclass {
 //        volk_free(mean);
 //        volk_free(stddev);
 
-        if (filter) volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq2, (lv_32fc_t*) iq, window, samples);
+        if (filter) {
+            volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq2, (lv_32fc_t*) iq, window, samples);
+        }
 
         plan->execute();
         volk_32fc_s32f_power_spectrum_32f(psd, (lv_32fc_t*) iq_out, (float) samples, samples);
@@ -54,7 +56,9 @@ class testclass {
 public:
 
     utils::complex* giq2() const {
-        if (!filter)return iq;
+        if (!filter) {
+            return iq;
+        }
         return (utils::complex*) volk_malloc(samples * sizeof(utils::complex), volk_get_alignment());
     }
 

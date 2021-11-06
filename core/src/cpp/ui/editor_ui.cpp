@@ -130,16 +130,16 @@ void editor_ui::draw(pipeline::schematic* nodes) {
     ne::EndDelete();
 
     ne::Suspend();
+    auto pos = ImGui::GetMousePos();
     if (ne::ShowBackgroundContextMenu()) {
         ImGui::OpenPopup("Create New Node");
     }
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
     if (ImGui::BeginPopup("Create New Node")) {
-        auto pos = ImGui::GetMousePos();
-
         nodes->forEachFactory([&](const std::string& p) {
             if (ImGui::MenuItem(p.c_str())) {
+                pos = ne::ScreenToCanvas(pos);
                 nodes->addBlock(p, pos.x, pos.y);
             }
         });

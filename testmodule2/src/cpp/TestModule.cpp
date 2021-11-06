@@ -4,39 +4,59 @@
 
 #define IM_INTERNAL
 #include <module/SDRModule.h>
-#include <iostream>
 #include <testbase.h>
-#include "drawtest.h"
+#include <TestModule.h>
 
-void drawmain() {
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::SetNextWindowSize(io.DisplaySize);
-    //std::cout << io.DisplaySize.x << "  " << io.DisplaySize.y << std::endl;
-    ImGui::Begin("Content", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                 ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings |
-                 ImGuiWindowFlags_NoBringToFrontOnFocus);
-    draw(ImGui::GetCurrentWindow());
+class TestBlock : public pipeline::block {
 
-    ImGui::End();
-}
+public:
+
+    TestBlock() : pipeline::block("TestBlock", ImColor(255, 0, 0)) {
+        txt.resize(10);
+        std::cout << txt.capacity() << std::endl;
+        addInput("Din", utils::stringType(), inTxt, []() {
+            std::cout << "Change" << std::endl;
+        }, true);
+        o1 = addOutput("Dout", utils::stringType(), outTxt, true);
+    }
+
+    void start() override {
+    }
+
+    void stop() override {
+    }
+
+    void drawMiddle() override {
+        ImGui::PushItemWidth(200);
+        if (ImGui::InputText("", &txt)) {
+            if (o1 == nullptr) {
+                std::cout << "NULLLLLL" << std::endl;
+            }
+            o1();
+        }
+        ImGui::PopItemWidth();
+        ImGui::Spring(1, 0);
+        std::string str = "Hatseflatsv2 " + (inTxt ? *inTxt : "");
+        ImGui::TextUnformatted(str.c_str());
+    }
+
+private:
+
+    pipeline::connection_callback o1;
+    std::string txt;
+    std::string* outTxt = &txt;
+    std::string* inTxt = nullptr;
+
+};
 
 class Test : public ModuleInstance {
-
-    void test() override {
-        std::cout << getTest() << std::endl;
-        std::cout << "-------MOD2---------" << std::endl;
-        ::init();
-        NativeGraphics::startMainWindow(drawmain);
-        deinit();
-    }
 
     [[nodiscard]] std::string getName() const override {
         return "testModule2";
     }
 
     void init(pipeline::node_manager *nodeManager) override {
+        nodeManager->registerBlockType("Test Block 1", createTestBlock);
     }
 
 };
@@ -54,4 +74,8 @@ ModuleInstance* createModuleContainer() {
 
 void destroyModuleContainer(ModuleInstance* instance) {
     delete (Test*) instance;
+}
+
+pipeline::block_ptr createTestBlock() {
+    return std::make_shared<TestBlock>();
 }

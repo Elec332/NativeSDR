@@ -23,12 +23,18 @@ void drawSampleDataType(bool connected) {
                       ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
 }
 
+void drawStringType(bool connected) {
+    ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::Circle, connected, ImColor(255, 0, 0),
+                      ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
+}
+
 void init_object_types() {
 }
 
 simple_type<datastream<utils::complex>> complex_stream("Complex Stream", drawComplexStream);
 simple_type<datastream<uint8_t>> data_stream("Data Stream", drawComplexStream);
-simple_type<utils::sampleData> sample_data("Complex Stream", drawComplexStream);
+simple_type<utils::sampleData> sample_data("SDR Data", drawComplexStream);
+simple_type<std::string> string_data("String", drawStringType);
 
 const utils::object_type<datastream<utils::complex>>* utils::complexStreamType() {
     return &complex_stream;
@@ -42,3 +48,6 @@ const utils::object_type<utils::sampleData>* utils::sampleDataType() {
     return &sample_data;
 }
 
+const utils::object_type<std::string>* utils::stringType() {
+    return &string_data;
+}

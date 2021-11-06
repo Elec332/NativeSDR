@@ -11,6 +11,7 @@
 #include <imgui/utilities/builders.h>
 #include <imgui/utilities/widgets.h>
 #include <imgui/implot.h>
+#include <imgui/imgui_stdlib.h>
 
 #ifdef IM_INTERNAL
 #define IMGUI_DEFINE_MATH_OPERATORS
