@@ -2,10 +2,10 @@
 // Created by Elec332 on 10/07/2021.
 //
 
+#define IM_INTERNAL
 #include <module/SDRModule.h>
 #include <iostream>
 #include <testbase.h>
-#include <NativeSDRGraphics.h>
 #include "drawtest.h"
 
 void drawmain() {
@@ -17,7 +17,7 @@ void drawmain() {
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings |
                  ImGuiWindowFlags_NoBringToFrontOnFocus);
-    draw();
+    draw(ImGui::GetCurrentWindow());
 
     ImGui::End();
 }
@@ -27,9 +27,16 @@ class Test : public ModuleInstance {
     void test() override {
         std::cout << getTest() << std::endl;
         std::cout << "-------MOD2---------" << std::endl;
-        init();
+        ::init();
         NativeGraphics::startMainWindow(drawmain);
         deinit();
+    }
+
+    [[nodiscard]] std::string getName() const override {
+        return "testModule2";
+    }
+
+    void init(pipeline::node_manager *nodeManager) override {
     }
 
 };

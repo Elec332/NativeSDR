@@ -5,6 +5,12 @@
 #include <filesystem>
 #include <module/libloader.h>
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
 libloader::library::library(const std::string &path) : location(path) {
 #ifdef _WIN32
     this->handle = LoadLibrary(path.c_str());
@@ -18,7 +24,7 @@ void libloader::library::close() {
         return;
     }
 #ifdef _WIN32
-    FreeLibrary(handle);
+    FreeLibrary((HMODULE) handle);
 #else
     //todo
 #endif
@@ -28,7 +34,11 @@ void libloader::library::close() {
 #ifdef _WIN32
 
 void *libloader::library::getSymbol(const std::string &name) const {
-    return (void *) GetProcAddress(this->handle, name.c_str());
+#ifdef _WIN32
+    return (void *) GetProcAddress((HMODULE) this->handle, name.c_str());
+#else
+    //todo
+#endif
 }
 
 #else

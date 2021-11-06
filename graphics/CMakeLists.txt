@@ -7,6 +7,7 @@ install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION /)
 
 add_compile_definitions(IMGUI_USER_CONFIG=<nativesdr_graphics_export.h>)
 add_compile_definitions(IMGUI_API=NATIVESDR_GRAPHICS_EXPORT)
+add_compile_definitions(IMPLOT_API=NATIVESDR_GRAPHICS_EXPORT)
 
 if(MSVC)
     target_include_directories(${PROJECT_NAME} PUBLIC

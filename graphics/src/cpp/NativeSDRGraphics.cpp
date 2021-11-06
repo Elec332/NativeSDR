@@ -46,9 +46,10 @@ int NativeGraphics::setupGraphics() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
-    window_GLFW = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
-    if (window_GLFW == nullptr)
+    window_GLFW = glfwCreateWindow(1280, 720, "NativeSDR", nullptr, nullptr);
+    if (window_GLFW == nullptr) {
         return 1;
+    }
     glfwMakeContextCurrent(window_GLFW);
     glfwSwapInterval(1);
 
@@ -59,6 +60,7 @@ int NativeGraphics::setupGraphics() {
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
     ImGui::StyleColorsDark();
@@ -96,6 +98,7 @@ void NativeGraphics::endRender() {
 void NativeGraphics::destroy() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window_GLFW);

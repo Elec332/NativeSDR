@@ -6,10 +6,16 @@
 #define NATIVESDR_SDRMODULE_H
 
 #include <module/module.h>
+#include <string>
+#include <pipeline/block/node_manager.h>
 
 class ModuleInstance {
 
 public:
+
+    [[nodiscard]] virtual std::string getName() const = 0;
+
+    virtual void init(pipeline::node_manager* nodeManager) = 0;
 
     virtual void test() = 0;
 

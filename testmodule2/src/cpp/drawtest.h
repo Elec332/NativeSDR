@@ -5,9 +5,12 @@
 #ifndef NATIVESDR_DRAWTEST_H
 #define NATIVESDR_DRAWTEST_H
 
+#define IM_INTERNAL
+#include <NativeSDRGraphics.h>
+
 void init();
 
-void draw();
+void draw(ImGuiWindow* window);
 
 void deinit();
 

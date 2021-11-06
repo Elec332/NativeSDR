@@ -10,10 +10,12 @@
 #include <imgui/imgui_node_editor.h>
 #include <imgui/utilities/builders.h>
 #include <imgui/utilities/widgets.h>
+#include <imgui/implot.h>
 
 #ifdef IM_INTERNAL
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui_internal.h>
+#include <imgui/implot_internal.h>
 #endif
 
 class NATIVESDR_GRAPHICS_EXPORT NativeGraphics {

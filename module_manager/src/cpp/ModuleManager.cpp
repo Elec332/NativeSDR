@@ -78,6 +78,7 @@ std::list<ModulePointer> getModules(std::list<libloader::library> &libs) {
         ModulePointer p = getModule(lib);
         if (p) {
             modules.push_front(p);
+            p->initModule();
             return true;
         }
         return false;

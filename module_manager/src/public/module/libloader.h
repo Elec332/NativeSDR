@@ -8,14 +8,6 @@
 #include <string>
 #include <functional>
 
-#ifdef _WIN32
-
-#include <Windows.h>
-
-#else
-#include <dlfcn.h>
-#endif
-
 namespace libloader {
 
     class loading_exception : public std::exception {
@@ -76,11 +68,7 @@ namespace libloader {
 
         std::string location;
 
-#ifdef _WIN32
-        HMODULE handle = nullptr;
-#else
         void* handle = nullptr;
-#endif
 
     };
 

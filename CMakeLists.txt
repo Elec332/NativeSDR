@@ -10,6 +10,7 @@ set(CMAKE_BASE_FOLDER ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/build/install")
 set(CMAKE_INCLUDE ${CMAKE_BASE_FOLDER}/DefaultCMake.cmake)
 set(MODULES_INCLUDE ${CMAKE_BASE_FOLDER}/DefaultModule.cmake)
+set(GOOGLETEST_VERSION release-1.11.0)
 
 add_subdirectory("main")
 add_subdirectory("core")

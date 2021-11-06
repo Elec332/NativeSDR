@@ -9,4 +9,6 @@
 
 NATIVESDR_CORE_EXPORT int startCore(int argc, char* argv[]);
 
+NATIVESDR_CORE_EXPORT void test();
+
 #endif //NATIVESDR_CORE_H
