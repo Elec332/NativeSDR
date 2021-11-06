@@ -9,24 +9,11 @@ add_compile_definitions(IMGUI_USER_CONFIG=<nativesdr_graphics_export.h>)
 add_compile_definitions(IMGUI_API=NATIVESDR_GRAPHICS_EXPORT)
 add_compile_definitions(IMPLOT_API=NATIVESDR_GRAPHICS_EXPORT)
 
+addLibrary(glew glew32)
+installLibrary(GLFW glfw3)
+
 if(MSVC)
-    target_include_directories(${PROJECT_NAME} PUBLIC
-            ${PROJECT_SOURCE_DIR}/libs/glew/include
-            ${PROJECT_SOURCE_DIR}/libs/GLFW/include
-    )
-
-    target_link_directories(${PROJECT_NAME} PUBLIC
-            ${PROJECT_SOURCE_DIR}/libs/glew/lib
-            ${PROJECT_SOURCE_DIR}/libs/GLFW/lib
-    )
-
-    target_link_libraries(${PROJECT_NAME} PUBLIC
-            glfw3dll
-            glew32
-    )
-
-    install(FILES ${PROJECT_SOURCE_DIR}/libs/glew/bin/glew32.dll DESTINATION /)
-    install(FILES ${PROJECT_SOURCE_DIR}/libs/GLFW/bin/glfw3.dll DESTINATION /)
+    target_link_libraries(${PROJECT_NAME} PUBLIC glfw3dll)
 else()
     #todo: Linux ect
 endif()

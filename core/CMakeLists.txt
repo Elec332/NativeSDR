@@ -6,31 +6,12 @@ include(${CMAKE_INCLUDE})
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION /)
 
 target_link_libraries(NativeSDR_core PRIVATE ModuleManager)
-target_include_directories(${PROJECT_NAME} PUBLIC ../module_manager/src/public)
+target_include_directories(${PROJECT_NAME} PUBLIC ../module_manager/src/public) # Y u make me do dis :/
 target_link_libraries(NativeSDR_core PRIVATE NativeSDR_graphics)
 
-if(MSVC)
-    target_include_directories(${PROJECT_NAME} PUBLIC
-            ${PROJECT_SOURCE_DIR}/libs/fftw/include
-            ${PROJECT_SOURCE_DIR}/libs/volk/include
-    )
-
-    target_link_directories(${PROJECT_NAME} PUBLIC
-            ${PROJECT_SOURCE_DIR}/libs/fftw/lib
-            ${PROJECT_SOURCE_DIR}/libs/volk/lib
-    )
-
-    target_link_libraries(${PROJECT_NAME} PUBLIC
-            libfftw3f-3
-            #libfftw3-3
-            volk
-    )
-
-    install(FILES ${PROJECT_SOURCE_DIR}/libs/fftw/bin/libfftw3f-3.dll DESTINATION /)
-    install(FILES ${PROJECT_SOURCE_DIR}/libs/volk/bin/volk.dll DESTINATION /)
-else()
-    #todo: Linux ect
-endif()
+addLibrary(fftw libfftw3f-3)
+addLibrary(volk volk)
+addLibraryRoot(json)
 
 #########################
 
