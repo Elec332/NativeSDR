@@ -5,6 +5,7 @@
 #ifndef NATIVESDR_SCHEMATIC_H
 #define NATIVESDR_SCHEMATIC_H
 
+#include <filesystem>
 #include <pipeline/block/node_manager.h>
 #include <pipeline/block/block_data.h>
 #include <nativesdr_core_export.h>
@@ -19,7 +20,13 @@ namespace pipeline {
 
     public:
 
-        virtual void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) const = 0;
+        virtual void start() = 0;
+
+        virtual void stop() = 0;
+
+        virtual void save() = 0;
+
+        virtual void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) = 0;
 
         virtual void forEachLink(const std::function<void(const pipeline::link&)>& func) = 0;
 
@@ -45,9 +52,9 @@ namespace pipeline {
 
     };
 
-    NATIVESDR_CORE_EXPORT pipeline::schematic* newSchematic(pipeline::node_manager* nodeManager);
+    NATIVESDR_CORE_EXPORT pipeline::schematic* newSchematic(pipeline::node_manager* nodeManager, const std::filesystem::path& file);
 
-    NATIVESDR_CORE_EXPORT void deleteSchematic(pipeline::schematic * schematic);
+    NATIVESDR_CORE_EXPORT void deleteSchematic(pipeline::schematic* schematic);
 
     struct link_instance {
 

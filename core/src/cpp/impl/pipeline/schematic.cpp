@@ -2,26 +2,47 @@
 // Created by Elec332 on 05/11/2021.
 //
 
+#include <mutex>
 #include <pipeline/block/schematic.h>
 #include <map>
 #include <impl/pipeline/wrapped_block.h>
 #include <impl/pipeline/schematic_links.h>
-#include <iostream>
+#include <utility>
+#include <fstream>
 
 #define LINK_COUNTER_START 0x7FFFFFFF
 
 class schematic_impl : public pipeline::schematic {
 
+    static bool save(const char*, size_t, ax::NodeEditor::SaveReasonFlags reason, void* userPointer) {
+        if (((schematic_impl*) userPointer)->cfg->SaveSettings ==
+            nullptr) { //Workaround for wonky implementation, it does some weird caching...
+            return false;
+        }
+        if ((reason & ax::NodeEditor::SaveReasonFlags::Position) == ax::NodeEditor::SaveReasonFlags::Position ||
+            reason == ax::NodeEditor::SaveReasonFlags::None) {
+            ((schematic_impl*) userPointer)->save();
+            return true;
+        }
+        return false;
+    }
+
 public:
 
-    explicit schematic_impl(pipeline::node_manager* nodeManager) : nodeManager(nodeManager) {
+    schematic_impl(pipeline::node_manager* nodeManager, std::filesystem::path file)
+            : nodeManager(nodeManager), path(std::move(file)) {
         cfg = new ax::NodeEditor::Config();
         cfg->SettingsFile = nullptr;
-        ctx = ax::NodeEditor::CreateEditor(cfg);
+        cfg->SaveSettings = save;
+        cfg->UserPointer = this;
+        ctx = nullptr; //Will be initialized in load()
         linkHandler = newLinkHandler(this);
+        load();
     }
 
     ~schematic_impl() {
+        stop_();
+        cfg->SaveSettings = nullptr;
         ax::NodeEditor::DestroyEditor(ctx);
         delete cfg;
     }
@@ -33,10 +54,95 @@ public:
         if (linkHandler->hasConnection(bb, bIn)) {
             return false;
         }
-        return true;
+        return aOut->getType()->equals(bIn->getType());
     }
 
-    void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) const override {
+    void stop_() { //Stop IDE from crying about virtual functions in destructors
+        std::scoped_lock<std::mutex> guard(startStopMutex);
+        if (running) {
+            running = false;
+            forEachBlock([](const pipeline::block_data& block) {
+                block->getBlock()->stop();
+            });
+        }
+    }
+
+    void start() override {
+        std::scoped_lock<std::mutex> guard(startStopMutex);
+        if (!running) {
+            running = true;
+            forEachBlock([](const pipeline::block_data& block) {
+                block->getBlock()->start();
+            });
+        }
+    }
+
+    void stop() override {
+        stop_();
+    }
+
+    void save() override {
+        if (loading) {
+            return;
+        }
+        std::scoped_lock<std::mutex> guard(saveLock);
+        nlohmann::json json;
+        nlohmann::json nodes = nlohmann::json::array();
+        nlohmann::json links = nlohmann::json::array();
+        save(nodes);
+        linkHandler->save(links);
+        json["nodes"] = nodes;
+        json["links"] = links;
+        std::ofstream file(path);
+        file << json;
+    }
+
+    void load() {
+        if (!exists(path)) {
+            return;
+        }
+        std::scoped_lock<std::mutex> guard(saveLock);
+        loading = true;
+        stop();
+        blocks.clear();
+        if (ctx) {
+            ax::NodeEditor::DestroyEditor(ctx);
+        }
+        ctx = ax::NodeEditor::CreateEditor(cfg);
+
+        std::ifstream ifs(path);
+        nlohmann::json json = nlohmann::json::parse(ifs);
+        nlohmann::json nodes = json["nodes"];
+        nlohmann::json links = json["links"];
+        load(nodes);
+        linkHandler->load(links);
+        loading = false;
+    }
+
+    void save(nlohmann::json& json) const {
+        for (const auto& b: blocks) {
+            ImVec2 v = ax::NodeEditor::GetNodePosition(b.first);
+            b.second->x = v.x;
+            b.second->y = v.y;
+            json.push_back(b.second->toJson());
+        }
+    }
+
+    void load(nlohmann::json& json) {
+        ax::NodeEditor::SetCurrentEditor(getEditor());
+        size_t max = 32;
+        for (const auto& element: json) {
+            wrapped_block wb = fromJson(element, nodeManager);
+            if (wb) {
+                blocks[wb->getIdInt()] = wb;
+                ax::NodeEditor::SetNodePosition(wb->getId(), ImVec2(wb->x, wb->y));
+                max = std::max(max, wb->getIdInt());
+            }
+        }
+        counter = max + 32;
+    }
+
+    void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) override {
         for (const auto& b: blocks) {
             func(b.second);
         }
@@ -66,17 +172,30 @@ public:
         }
         wb->x = x;
         wb->y = y;
-        blocks[(size_t) wb->getId()] = wb;
+        blocks[wb->getIdInt()] = wb;
         ax::NodeEditor::SetCurrentEditor(getEditor());
         ax::NodeEditor::SetNodePosition(wb->getId(), ImVec2(wb->x, wb->y));
+        {
+            std::scoped_lock<std::mutex> guard(startStopMutex);
+            if (running) {
+                wb->getBlock()->start();
+            }
+        }
         return true;
     }
 
     bool deleteBlock(ax::NodeEditor::NodeId id) override {
         wrapped_block b = blocks[(size_t) id];
-        linkHandler->deleteBlockLinks(b);
+        linkHandler->deleteBlockLinks(b); //All links _should_ already be gone by here, this is just to make sure.
         bool ret = blocks.erase((size_t) id);
+        {
+            std::scoped_lock<std::mutex> guard(startStopMutex);
+            if (running) {
+                b->getBlock()->stop();
+            }
+        }
         ax::NodeEditor::DeleteNode(id);
+        save();
         return ret;
     }
 
@@ -145,22 +264,27 @@ public:
         if (!block_b) {
             return false;
         }
-        return linkHandler->doConnect(a, block, b, block_b);
+        return linkHandler->doConnect(a, block.get(), b, block_b.get());
     }
 
 private:
 
+    std::mutex saveLock;
+    bool loading = false;
+    std::filesystem::path path;
     std::shared_ptr<schematic_link_handler> linkHandler;
     pipeline::node_manager* nodeManager;
     size_t counter = 32;
     ax::NodeEditor::Config* cfg;
     ax::NodeEditor::EditorContext* ctx;
     std::map<size_t, wrapped_block> blocks;
+    bool running = false;
+    std::mutex startStopMutex;
 
 };
 
-pipeline::schematic* pipeline::newSchematic(pipeline::node_manager* nodeManager) {
-    return new schematic_impl(nodeManager);
+pipeline::schematic* pipeline::newSchematic(pipeline::node_manager* nodeManager, const std::filesystem::path& file) {
+    return new schematic_impl(nodeManager, file);
 }
 
 void pipeline::deleteSchematic(pipeline::schematic* schematic) {
@@ -172,6 +296,32 @@ class schematic_link_handler_impl : public schematic_link_handler {
 public:
 
     explicit schematic_link_handler_impl(pipeline::schematic* schematic) : schematic(schematic) {
+    }
+
+    void save(nlohmann::json& json) const override {
+        for (const auto& b: links) {
+            nlohmann::json lj;
+            lj["a"] = (size_t) b.second->startPin;
+            lj["b"] = (size_t) b.second->endPin;
+            json.push_back(lj);
+        }
+    }
+
+    void load(nlohmann::json& json) override {
+        pinToLinks.clear();
+        links.clear();
+        linkCounter = LINK_COUNTER_START;
+
+        ax::NodeEditor::SetCurrentEditor(schematic->getEditor());
+        for (const auto& element: json) {
+            auto a = element["a"].get<size_t>();
+            auto b = element["b"].get<size_t>();
+            pipeline::block_data blockA = schematic->getBlock(a - (a % 32));
+            pipeline::block_data blockB = schematic->getBlock(b - (b % 32));
+            if (blockA && blockB) {
+                doConnect(a, (wrapped_block_instance*) blockA.get(), b, (wrapped_block_instance*) blockB.get());
+            }
+        }
     }
 
     block_connection* getConnection(ax::NodeEditor::PinId pin, bool input) {
@@ -193,7 +343,7 @@ public:
         }
     }
 
-    bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block& blockA, ax::NodeEditor::PinId pinB, wrapped_block& blockB) override {
+    bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block_instance* blockA, ax::NodeEditor::PinId pinB, wrapped_block_instance* blockB) override {
         if (linkCounter >= 0xFFFFFFFE) {
             throw std::exception("Link overflow!");
         }
@@ -202,11 +352,17 @@ public:
         }
         size_t id = linkCounter++;
         links[id] = std::make_shared<pipeline::link_instance>(id, pinA, pinB);
-        pinToLinks[(size_t) pinA].push_front(id);
+        std::list<size_t>& pins = pinToLinks[(size_t) pinA];
+        pins.push_front(id);
         pinToLinks[(size_t) pinB].push_front(id);
+
         auto output = ((block_connection*) blockA->getOutputPin(pinA).get());
         output->initOutput(this, pinA);
-        ((block_connection*) blockB->getInputPin(pinB).get())->setObject(output);
+        output->setConnectionCount(pins.size());
+
+        ((block_connection*) blockB->getInputPin(pinB).get())->setObject(output, 0);
+
+        schematic->save();
         return true;
     }
 
@@ -214,12 +370,15 @@ public:
         auto id = (size_t) id_;
         {
             pipeline::link l = links[id];
-            pinToLinks[(size_t) l->startPin].remove(id);
+            std::list<size_t>& pins = pinToLinks[(size_t) l->startPin];
+            pins.remove(id);
             pinToLinks[(size_t) l->endPin].remove(id);
-            getConnection(l->endPin, true)->setObject(nullptr);
+            getConnection(l->endPin, true)->setObject(nullptr, 0);
+            getConnection(l->startPin, false)->setConnectionCount(pins.size());
         }
         bool ret = links.erase((size_t) id);
         ax::NodeEditor::DeleteLink(id);
+        schematic->save();
         return ret;
     }
 
@@ -232,10 +391,12 @@ public:
                     if (l) {
                         auto pin = (size_t) l->startPin;
                         if (id == pin) {
-                            pinToLinks[(size_t) l->endPin].remove(id);
-                            getConnection(l->endPin, true)->setObject(nullptr);
+                            pinToLinks[(size_t) l->endPin].remove(i);
+                            getConnection(l->endPin, true)->setObject(nullptr, 0);
                         } else {
-                            pinToLinks[pin].remove(id);
+                            std::list<size_t>& pins = pinToLinks[pin];
+                            pins.remove(i);
+                            getConnection(l->startPin, false)->setConnectionCount(pins.size());
                         }
                     }
                 }
@@ -249,6 +410,7 @@ public:
     void deleteBlockLinks(const wrapped_block& block) override {
         deleteLinks(block, block->getBlock()->getOutputs());
         deleteLinks(block, block->getBlock()->getInputs());
+        schematic->save();
     }
 
     bool hasConnection(const wrapped_block& block, const pipeline::block_connection_base& blockConnection) override {
@@ -261,9 +423,9 @@ public:
         }
     }
 
-    void onLinkValueChanged(ax::NodeEditor::PinId pin, const block_connection* newRef) override {
+    void onLinkValueChanged(ax::NodeEditor::PinId pin, const block_connection* newRef, int flags) override {
         for (const auto& l: pinToLinks[(size_t) pin]) {
-            getConnection(links[l]->endPin, true)->setObject(newRef);
+            getConnection(links[l]->endPin, true)->setObject(newRef, flags);
         }
     }
 

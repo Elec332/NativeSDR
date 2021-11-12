@@ -15,7 +15,7 @@ void drawTopRow() {
     ImGui::PopID();
 }
 
-void drawmain(pipeline::schematic* nm) {
+void drawmain(pipeline::schematic** nm) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowSize(io.DisplaySize);
@@ -30,7 +30,7 @@ void drawmain(pipeline::schematic* nm) {
     drawTopRow();
 
     if (showEditor) {
-        editor_ui::draw(nm);
+        editor_ui::draw(*nm);
     } else {
         sdr_ui::draw();
     }
@@ -46,6 +46,6 @@ void main_window::deinit() {
     NativeGraphics::destroy();
 }
 
-void main_window::start(pipeline::schematic* nodes) {
+void main_window::start(pipeline::schematic** nodes) {
     NativeGraphics::startMainWindow(drawmain, nodes);
 }

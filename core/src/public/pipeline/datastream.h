@@ -5,85 +5,79 @@
 #ifndef NATIVESDR_DATASTREAM_H
 #define NATIVESDR_DATASTREAM_H
 
+#include <nativesdr_core_export.h>
 #include <cstdlib>
 #include <mutex>
 #include <condition_variable>
 #include <functional>
 
-template<class T>
-class datastream {
+namespace pipeline {
 
-public:
+    template<class T>
+    class datastream {
 
-    virtual bool write(std::function<int(T*)> writer) = 0;
+    public:
 
-    virtual bool read(std::function<void(T*, int)> reader) = 0;
+        /**
+         * Writes data to this stream, async
+         *
+         * @param writer The data writer (must return length of data written)
+         * @return Whether the data was read (false if e.g. stream stopped)
+         */
+        virtual bool write(const std::function<int(T*)>& writer) = 0;
 
-};
+        /**
+         * Sets the amount of stream readers, all input data will be voided if the stream has 0 readers
+         *
+         * @param readers The amount of stream readers
+         */
+        virtual void setReaders(int readers) = 0;
 
-template<class T>
-class stream_impl : public datastream<T> {
+        /**
+         * Read data from this stream, async
+         *
+         * @param reader The data reader
+         * @return Whether the data was read (false if e.g. stream stopped)
+         */
+        virtual bool read(const std::function<void(T*, int)>& reader) = 0;
 
-    stream_impl() {
-        writeBuf = malloc(100);
-        readBuf = malloc(100);
+        /**
+         * (Re)starts the stream
+         */
+        virtual void start() = 0;
+
+        /**
+         * Stops the stream, kicks all readers & writers out of their waiting queue
+         */
+        virtual void stop() = 0;
+
+    };
+
+    /**
+     * Returns a new stream for the specified type.
+     * WARNING: The returned stream will void any data received until a receiver count has been set!
+     *
+     * @return A new stream
+     */
+    template<class T>
+    datastream<T>* createStream() {
+        return (datastream<T>*) createUnknownStream(sizeof(T));
     }
 
-    ~stream_impl() {
-        free(writeBuf);
-        free(readBuf);
+    NATIVESDR_CORE_EXPORT datastream<void>* createUnknownStream(int size);
+
+    /**
+     * Deletes a data stream
+     *
+     * @param stream The stream to be deleted
+     */
+    template<class T>
+    void deleteStream(datastream<T>* stream) {
+        deleteUnknownStream((datastream<void>*) stream);
     }
 
-    bool write(std::function<int(T*)> writer) override {
-        std::unique_lock<std::mutex> raii(writeMutex);
-        int len = writer(writeBuf);
-        writeWait.wait(raii, [&] {
-            return readDone || stopped;
-        });
-        if (stopped) {
-            return false;
-        }
+    NATIVESDR_CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);
 
-        T* temp = readBuf;
-        readBuf = writeBuf;
-        writeSize = len;
-        writeBuf = temp;
-        writeDone = true;
-        readWait.notify_all();
-        return true;
-    }
-
-    bool read(std::function<void(T*, int)> reader) override {
-        std::unique_lock<std::mutex> raii(readMutex);
-        readWait.wait(raii, [&] {
-            return writeDone || stopped;
-        });
-        if (stopped) {
-            return false;
-        }
-
-        reader(readBuf, writeSize);
-        readDone = true;
-        writeWait.notify_all();
-        return true;
-    }
-
-private:
-
-    T* writeBuf;
-    T* readBuf;
-    int writeSize = 0;
-
-    std::mutex writeMutex{};
-    std::condition_variable writeWait{};
-    bool writeDone = false;
-
-    std::mutex readMutex{};
-    std::condition_variable readWait{};
-    bool readDone = true;
-
-    bool stopped = false;
-
-};
+}
 
 #endif //NATIVESDR_DATASTREAM_H

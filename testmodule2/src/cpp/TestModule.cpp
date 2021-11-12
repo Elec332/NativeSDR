@@ -7,16 +7,134 @@
 #include <testbase.h>
 #include <TestModule.h>
 
+class TestBlockSI : public pipeline::block {
+
+public:
+
+    TestBlockSI() : pipeline::block("TestBlock", ImColor(255, 0, 0)) {
+        TestBlockSI* si = this;
+        addInput("Din", utils::dataStreamType(), stream, [si](int flags) {
+            std::cout << (size_t) si <<  "Change " << flags << std::endl;
+        });
+        data = (uint8_t*) malloc(2);
+        data[0] = data[1] = 0;
+    }
+
+    ~TestBlockSI() {
+        free(data);
+    }
+
+    void start() override {
+        thread = std::thread([&]() {
+            while (true) {
+                if (stopped) {
+                    return;
+                }
+                if (stream) {
+                    stream->read([&](uint8_t* dat, int len) {
+                        memcpy(data, dat, len);
+                    });
+                } else {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                }
+            }
+        });
+    }
+
+    void stop() override {
+        if (stream) {
+            stream->stop();
+        }
+        std::cout << "STOP IN" << std::endl;
+        stopped = true;
+        thread.join();
+    }
+
+    void drawMiddle() override {
+        ImGui::Spring(1, 0);
+        std::string str = "Hatseflats In:  " + std::to_string(data[0]) + " " + std::to_string(data[1]);
+        ImGui::TextUnformatted(str.c_str());
+        str = std::to_string((size_t) this);
+        ImGui::TextUnformatted(str.c_str());
+    }
+
+private:
+
+    std::thread thread;
+    bool stopped = false;
+    uint8_t * data;
+    pipeline::datastream<uint8_t>* stream = nullptr;
+
+};
+
+class TestBlockSO : public pipeline::block {
+
+public:
+
+    TestBlockSO() : pipeline::block("TestBlock", ImColor(255, 0, 0)) {
+        addOutput("Dout", utils::dataStreamType(), stream, true);
+        stream = pipeline::createStream<uint8_t>();
+        data = (uint8_t*) malloc(2);
+        srand(time(nullptr));
+    }
+
+    ~TestBlockSO() {
+        pipeline::deleteStream(stream);
+        free(data);
+    }
+
+    void start() override {
+        stream->start();
+        thread = std::thread([&]() {
+            while (true) {
+                if (stopped) {
+                    return;
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                if (stopped) {
+                    return;
+                }
+                data[0] = rand() % 100;
+                data[1] = rand() % 100;
+                stream->write([&](uint8_t* dat) {
+                    memcpy(dat, data, 2);
+                    return 2;
+                });
+            }
+        });
+    }
+
+    void stop() override {
+        stream->stop();
+        stopped = true;
+        std::cout << "STOP" << std::endl;
+        thread.join();
+    }
+
+    void drawMiddle() override {
+        ImGui::Spring(1, 0);
+        std::string str = "Hatseflats out:  " + std::to_string(data[0]) + " " + std::to_string(data[1]);
+        ImGui::TextUnformatted(str.c_str());
+    }
+
+private:
+
+    std::thread thread;
+    bool stopped = false;
+    uint8_t * data;
+    pipeline::datastream<uint8_t>* stream;
+
+};
+
 class TestBlock : public pipeline::block {
 
 public:
 
     TestBlock() : pipeline::block("TestBlock", ImColor(255, 0, 0)) {
         txt.resize(10);
-        std::cout << txt.capacity() << std::endl;
-        addInput("Din", utils::stringType(), inTxt, []() {
-            std::cout << "Change" << std::endl;
-        }, true);
+        addInput("Din", utils::stringType(), inTxt, [](int flags) {
+            std::cout << "Change " << flags << std::endl;
+        });
         o1 = addOutput("Dout", utils::stringType(), outTxt, true);
     }
 
@@ -29,10 +147,7 @@ public:
     void drawMiddle() override {
         ImGui::PushItemWidth(200);
         if (ImGui::InputText("", &txt)) {
-            if (o1 == nullptr) {
-                std::cout << "NULLLLLL" << std::endl;
-            }
-            o1();
+            o1(1);
         }
         ImGui::PopItemWidth();
         ImGui::Spring(1, 0);
@@ -57,6 +172,8 @@ class Test : public ModuleInstance {
 
     void init(pipeline::node_manager *nodeManager) override {
         nodeManager->registerBlockType("Test Block 1", createTestBlock);
+        nodeManager->registerBlockType("Test Block Out", createStreamOutBlock);
+        nodeManager->registerBlockType("Test Block In", createStreamInBlock);
     }
 
 };
@@ -79,3 +196,13 @@ void destroyModuleContainer(ModuleInstance* instance) {
 pipeline::block_ptr createTestBlock() {
     return std::make_shared<TestBlock>();
 }
+
+pipeline::block_ptr createStreamInBlock() {
+    return std::make_shared<TestBlockSI>();
+}
+
+pipeline::block_ptr createStreamOutBlock() {
+    return std::make_shared<TestBlockSO>();
+}
+
+

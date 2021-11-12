@@ -19,6 +19,10 @@ public:
         return name;
     }
 
+    bool equals(const utils::object_type_base* other) const override {
+        return this == other;
+    }
+
 private:
 
     const std::string name;

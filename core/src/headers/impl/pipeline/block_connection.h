@@ -15,7 +15,9 @@ public:
 
     virtual void initOutput(schematic_link_handler* lh, ax::NodeEditor::PinId pin) = 0;
 
-    virtual void setObject(const block_connection* other) = 0;
+    virtual void setObject(const block_connection* other, int flags) = 0;
+
+    virtual void setConnectionCount(size_t count) = 0;
 
 };
 

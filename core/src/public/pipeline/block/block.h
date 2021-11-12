@@ -21,17 +21,17 @@ namespace pipeline {
 
     typedef std::shared_ptr<block_connection_base_instance> block_connection_base;
 
-    typedef std::function<void()> connection_callback;
+    typedef std::function<void(int flags)> connection_callback;
 
     class block_connection_base_instance {
 
-        NATIVESDR_CORE_EXPORT static pipeline::block_connection_base createBlockConnectionImpl(const std::string& name, const utils::object_type_base* type, void*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id);
+        NATIVESDR_CORE_EXPORT static pipeline::block_connection_base createBlockConnectionImpl(const std::string& name, const utils::object_type_base* type, void*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id, const std::type_info& type_info);
 
     public:
 
         template<class T>
         static block_connection_base createBlockConnection(const std::string& name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id) {
-            return createBlockConnectionImpl(name, type, (void*&) object, callback, multi, id);
+            return createBlockConnectionImpl(name, type, (void*&) object, callback, multi, id, typeid(T));
         }
 
         [[nodiscard]] virtual std::string getName() const = 0;
@@ -42,7 +42,7 @@ namespace pipeline {
 
         [[nodiscard]] virtual bool canConnectMultiple() const = 0;
 
-        virtual void onValueChanged() const = 0;
+        virtual void onValueChanged(int flags) const = 0;
 
     };
 
@@ -81,22 +81,22 @@ namespace pipeline {
     protected:
 
         template<class T>
-        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id) {
-            inputs.push_front(pipeline::block_connection_base_instance::createBlockConnection(name, type, object, callback, multi, id));
+        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, uint8_t id) {
+            inputs.push_front(pipeline::block_connection_base_instance::createBlockConnection(name, type, object, callback, false, id));
         }
 
         template<class T>
         connection_callback addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) {
             block_connection_base conn = pipeline::block_connection_base_instance::createBlockConnection(name, type, object, nullptr, multi, id);
             outputs.push_front(conn);
-            return [conn]() {
-                conn->onValueChanged();
+            return [conn](int flags) {
+                conn->onValueChanged(flags);
             };
         }
 
         template<class T>
-        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, bool multi) {
-            addInput(name, type, object, callback, multi, pinCounter++);
+        void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback) {
+            addInput(name, type, object, callback, pinCounter++);
         }
 
         template<class T>

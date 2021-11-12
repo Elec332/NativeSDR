@@ -9,6 +9,7 @@
 #include <string>
 #include <util/types.h>
 #include <pipeline/datastream.h>
+#include <iostream>
 
 namespace utils {
 
@@ -20,15 +21,20 @@ namespace utils {
 
         virtual void drawIcon(bool connected) const = 0;
 
+        virtual bool equals(const utils::object_type_base* other) const = 0;
+
+        virtual void setConnectionCount(void* ref, size_t count) const {
+        }
+
     };
 
     template<class T>
     class object_type : public object_type_base {
     };
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<datastream<utils::complex>>* complexStreamType();
+    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<utils::complex>>* complexStreamType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<datastream<uint8_t>>* dataStreamType();
+    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<uint8_t>>* dataStreamType();
 
     NATIVESDR_CORE_EXPORT const utils::object_type<utils::sampleData>* sampleDataType();
 

@@ -15,7 +15,7 @@ namespace main_window {
 
     void deinit();
 
-    void start(pipeline::schematic* nodes);
+    void start(pipeline::schematic** nodes);
 
 }
 

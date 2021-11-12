@@ -22,8 +22,6 @@ void editor_ui::deinit() {
 
 void editor_ui::draw(pipeline::schematic* nodes) {
     ne::SetCurrentEditor(nodes->getEditor());
-//    ImVec2 winSize = ImGui::GetWindowSize();
-//    ImVec2 mousePos = ImGui::GetMousePos();
 
     ne::Begin("Editor");
     util::BlueprintNodeBuilder builder(background, ImGui::GetTextureWidth(background),
@@ -69,9 +67,7 @@ void editor_ui::draw(pipeline::schematic* nodes) {
         builder.End();
     });
 
-    int i = 1;
     nodes->forEachLink([&](const pipeline::link& link) {
-        std::cout << "Link " << i++ << std::endl;
         ne::Link(link->id, link->startPin, link->endPin, link->color, 2.0f);
     });
 

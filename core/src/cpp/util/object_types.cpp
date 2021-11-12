@@ -8,6 +8,20 @@
 #include <utility>
 #include "subinit.h"
 
+template<class T>
+class stream_type : public simple_type<pipeline::datastream<T>> {
+
+public:
+
+    stream_type(std::string name, void(* drawer)(bool)) noexcept: simple_type(std::move(name), drawer) {
+    }
+
+    void setConnectionCount(void* ref, size_t count) const override {
+        ((pipeline::datastream<T>*) ref)->setReaders(count);
+    }
+
+};
+
 void drawComplexStream(bool connected) {
     ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::Flow, connected, ImColor(255, 255, 255),
                       ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
@@ -31,16 +45,16 @@ void drawStringType(bool connected) {
 void init_object_types() {
 }
 
-simple_type<datastream<utils::complex>> complex_stream("Complex Stream", drawComplexStream);
-simple_type<datastream<uint8_t>> data_stream("Data Stream", drawComplexStream);
+stream_type<utils::complex> complex_stream("Complex Stream", drawComplexStream);
+stream_type<uint8_t> data_stream("Data Stream", drawComplexStream);
 simple_type<utils::sampleData> sample_data("SDR Data", drawComplexStream);
 simple_type<std::string> string_data("String", drawStringType);
 
-const utils::object_type<datastream<utils::complex>>* utils::complexStreamType() {
+const utils::object_type<pipeline::datastream<utils::complex>>* utils::complexStreamType() {
     return &complex_stream;
 }
 
-const utils::object_type<datastream<uint8_t>>* utils::dataStreamType() {
+const utils::object_type<pipeline::datastream<uint8_t>>* utils::dataStreamType() {
     return &data_stream;
 }
 

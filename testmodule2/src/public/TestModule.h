@@ -7,4 +7,8 @@
 
 pipeline::block_ptr createTestBlock();
 
+pipeline::block_ptr createStreamOutBlock();
+
+pipeline::block_ptr createStreamInBlock();
+
 #endif //NATIVESDR_TESTMODULE_H
