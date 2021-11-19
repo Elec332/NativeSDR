@@ -7,10 +7,20 @@
 
 bool showEditor = false;
 
-void drawTopRow() {
-    ImGui::PushID(ImGui::GetID("editor_switch"));
+void drawTopRow(pipeline::schematic* nm) {
+    ImGui::PushID("editor_switch");
     if (ImGui::Button(showEditor ? "Show Interface" : "Show Editor", ImVec2(100, 30))) {
         showEditor = !showEditor;
+    }
+    ImGui::PopID();
+    ImGui::SameLine();
+    ImGui::PushID("stst_switch");
+    if (ImGui::Button(nm->isStarted() ? "Stop" : "Start", ImVec2(100, 30))) {
+        if (nm->isStarted()) {
+            nm->stop();
+        } else {
+            nm->start();
+        }
     }
     ImGui::PopID();
 }
@@ -27,12 +37,12 @@ void drawmain(pipeline::schematic** nm) {
     ImVec2 vMax = ImGui::GetWindowContentRegionMax();
     int width = vMax.x - vMin.x;
     int height = vMax.y - vMin.y;
-    drawTopRow();
+    drawTopRow(*nm);
 
     if (showEditor) {
         editor_ui::draw(*nm);
     } else {
-        sdr_ui::draw();
+        sdr_ui::draw(*nm);
     }
 
     ImGui::End();

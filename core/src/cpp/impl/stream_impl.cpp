@@ -5,6 +5,7 @@
 #include <pipeline/datastream.h>
 #include <iostream>
 #include <set>
+#include <dsp/malloc.h>
 
 template<class T>
 class stream_impl : public pipeline::datastream<T> {
@@ -12,13 +13,13 @@ class stream_impl : public pipeline::datastream<T> {
 public:
 
     explicit stream_impl(int size) {
-        writeBuf = malloc(100 * size);
-        readBuf = malloc(100 * size);
+        writeBuf = dsp::malloc(1024 * size * 128);
+        readBuf = dsp::malloc(1024 * size * 128);
     }
 
     ~stream_impl() {
-        free(writeBuf);
-        free(readBuf);
+        dsp::free(writeBuf);
+        dsp::free(readBuf);
     }
 
     bool write(const std::function<int(T*)>& writer) override {

@@ -24,9 +24,13 @@ namespace pipeline {
 
         virtual void stop() = 0;
 
+        virtual bool isStarted() = 0;
+
         virtual void save() = 0;
 
         virtual void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) = 0;
+
+        virtual void forEachBlock(const std::string& type, const std::function<void(const pipeline::block_data&)>& func) = 0;
 
         virtual void forEachLink(const std::function<void(const pipeline::link&)>& func) = 0;
 
@@ -58,8 +62,7 @@ namespace pipeline {
 
     struct link_instance {
 
-        link_instance(ax::NodeEditor::LinkId id, ax::NodeEditor::PinId startPinId, ax::NodeEditor::PinId endPinId,
-                      ImColor color = ImColor(255, 255, 255)) :
+        link_instance(ax::NodeEditor::LinkId id, ax::NodeEditor::PinId startPinId, ax::NodeEditor::PinId endPinId, ImColor color = ImColor(255, 255, 255)) :
                 id(id), startPin(startPinId), endPin(endPinId), color(color.Value) {
         }
 

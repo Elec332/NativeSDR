@@ -21,6 +21,8 @@ namespace pipeline {
 
         [[nodiscard]] virtual ax::NodeEditor::NodeId getId() const = 0;
 
+        [[nodiscard]] virtual const std::string& getType() const = 0;
+
     };
 
     typedef std::shared_ptr<block_data_instance> block_data;

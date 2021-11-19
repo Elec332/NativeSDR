@@ -31,6 +31,10 @@ public:
         return ID;
     }
 
+    [[nodiscard]] const std::string& getType() const override {
+        return type;
+    }
+
     [[nodiscard]] pipeline::block_connection_base
     getPin(ax::NodeEditor::PinId pin, const pipeline::block::connection_list& pins) const {
         auto p = (size_t) pin;

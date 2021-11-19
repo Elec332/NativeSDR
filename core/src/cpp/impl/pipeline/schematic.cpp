@@ -9,6 +9,7 @@
 #include <impl/pipeline/schematic_links.h>
 #include <utility>
 #include <fstream>
+#include <future>
 
 #define LINK_COUNTER_START 0x7FFFFFFF
 
@@ -60,10 +61,16 @@ public:
     void stop_() { //Stop IDE from crying about virtual functions in destructors
         std::scoped_lock<std::mutex> guard(startStopMutex);
         if (running) {
-            running = false;
-            forEachBlock([](const pipeline::block_data& block) {
-                block->getBlock()->stop();
+            std::list<std::future<void>> joinPool;
+            forEachBlock([&](const pipeline::block_data& block) {
+                joinPool.push_front(std::async(std::launch::async, [block]() {
+                    block->getBlock()->stop();
+                }));
             });
+            for (auto& a: joinPool) {
+                a.wait();
+            }
+            running = false;
         }
     }
 
@@ -79,6 +86,11 @@ public:
 
     void stop() override {
         stop_();
+    }
+
+    bool isStarted() override {
+        std::scoped_lock<std::mutex> guard(startStopMutex);
+        return running;
     }
 
     void save() override {
@@ -145,6 +157,14 @@ public:
     void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) override {
         for (const auto& b: blocks) {
             func(b.second);
+        }
+    }
+
+    void forEachBlock(const std::string& type, const std::function<void(const pipeline::block_data&)>& func) override {
+        for (const auto& b: blocks) {
+            if (b.second->getType() == type) {
+                func(b.second);
+            }
         }
     }
 
@@ -318,7 +338,7 @@ public:
             auto b = element["b"].get<size_t>();
             pipeline::block_data blockA = schematic->getBlock(a - (a % 32));
             pipeline::block_data blockB = schematic->getBlock(b - (b % 32));
-            if (blockA && blockB) {
+            if (blockA && blockB && ((wrapped_block_instance*) blockA.get())->getOutputPin(a) != nullptr && ((wrapped_block_instance*) blockB.get())->getInputPin(b) != nullptr) {
                 doConnect(a, (wrapped_block_instance*) blockA.get(), b, (wrapped_block_instance*) blockB.get());
             }
         }

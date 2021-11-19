@@ -51,6 +51,11 @@ namespace pipeline {
          */
         virtual void stop() = 0;
 
+        /**
+         * Auxiliary stream data, type of data is dependant on the stream type "T".
+         */
+        void* auxData = nullptr;
+
     };
 
     /**

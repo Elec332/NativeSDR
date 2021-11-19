@@ -10,11 +10,13 @@
 #include <fftw3.h>
 #include <map>
 #include <ui/main_window.h>
+#include "subinit.h"
 
 int startCore(int argc, char* argv[]) {
     std::filesystem::path exec(argv[0]);
     exec = exec.parent_path();
 
+    init_malloc();
     fftwf_init_threads();
     fftwf_plan_with_nthreads(4);
     fftwf_set_timelimit(0.003);
@@ -29,6 +31,7 @@ int startCore(int argc, char* argv[]) {
     //////////////////////////////////////////////////////////////////////
 
     pipeline::node_manager* nodeManager = newNodeManager();
+    nodeManager->registerBlockType("UI", sdr_ui::createUIBlock);
     for (const auto& p: modules) {
         ModuleInstance* i = p->createModuleContainer();
         std::cout << "Loading module: " << i->getName() << std::endl;
@@ -36,7 +39,6 @@ int startCore(int argc, char* argv[]) {
         dealloc[i] = p.get();
     }
     pipeline::schematic* schematic = pipeline::newSchematic(nodeManager, exec / "start.json");
-    schematic->start();
 
     main_window::start(&schematic);
 

@@ -5,10 +5,16 @@
 #ifndef NATIVESDR_TESTMODULE_H
 #define NATIVESDR_TESTMODULE_H
 
+#include <pipeline/block/block_base_impl.h>
+
 pipeline::block_ptr createTestBlock();
 
 pipeline::block_ptr createStreamOutBlock();
 
 pipeline::block_ptr createStreamInBlock();
+
+pipeline::block_ptr createStreamFileBlock();
+
+pipeline::block_ptr createFFTBlock();
 
 #endif //NATIVESDR_TESTMODULE_H

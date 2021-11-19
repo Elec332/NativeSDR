@@ -7,145 +7,88 @@
 #include <iostream>
 #include <dsp/fft.h>
 #include "ui/sdr_ui.h"
-#include "util/wav_reader.h"
 
-int factor = 16;
-bool filter = true;
-
-class testclass {
-
-    void update(FILE* file, file_data* data) const {
-        fread(buf, 1, samples * 2 * sizeof(int16_t), file);
-        dsp::IQConverter converter = dsp::getConverter(data->sampleData.bitsPerSample,
-                                                       data->sampleData.bitsPerSample != 8,
-                                                       data->sampleData.blockAlign);
-        converter(buf, iq, samples);
-//        auto* mean = (float*) volk_malloc(sizeof(float), volk_get_alignment());
-//        auto* stddev = (float*) volk_malloc(sizeof(float), volk_get_alignment());
-//
-//        volk_32f_stddev_and_mean_32f_x2(stddev, mean, (float*) iq, samples * 2);
-//        for (int i = 0; i < samples * 2; ++i) {
-//            ((float*) iq)[i] -= *mean;
-//        }
-//
-//        volk_free(mean);
-//        volk_free(stddev);
-
-        if (filter) {
-            volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq2, (lv_32fc_t*) iq, window, samples);
-        }
-
-        plan->execute();
-        volk_32fc_s32f_power_spectrum_32f(psd, (lv_32fc_t*) iq_out, (float) samples, samples);
-
-        int offset = 0;
-        for (int i = 0; i < samples / factor; ++i) {
-            float max = -INFINITY;
-            for (int j = 0; j < factor; ++j) {
-                if (psd[offset + j] > max) {
-                    max = psd[offset + j];
-                }
-            }
-            drawBuf[i] = max;
-            offset += factor;
-        }
-    }
-
-    float PI = 3.14159265358979323846;
-
-public:
-
-    utils::complex* giq2() const {
-        if (!filter) {
-            return iq;
-        }
-        return (utils::complex*) volk_malloc(samples * sizeof(utils::complex), volk_get_alignment());
-    }
-
-    explicit testclass(const int samplez) :
-            samples(samplez),
-            buf((int16_t*) volk_malloc(samples * sizeof(int16_t) * 2, volk_get_alignment())),
-            iq((utils::complex*) volk_malloc(samples * sizeof(utils::complex), volk_get_alignment())),
-            iq2(giq2()),
-            iq_out((utils::complex*) volk_malloc(samples * sizeof(utils::complex), volk_get_alignment())),
-            psd((float*) volk_malloc(samples * sizeof(float), volk_get_alignment())),
-            window((float*) volk_malloc(samples * sizeof(float), volk_get_alignment())),
-            drawBuf((float*) volk_malloc((samples * sizeof(float)) / factor, volk_get_alignment())),
-            plan(dsp::create_plan(samples, iq2, iq_out, true)) {
-        for (int i = 0; i < samples; i++) {
-//                window[i] = (i % 2) ? 1 : -1;
-            double alpha = 0.16;
-            double a0 = (1.0f - alpha) / 2.0f;
-            double a2 = alpha / 2.0f;
-            double ret = a0 - (0.5f * cos(2.0f * PI * (i / (double) samples))) + (a2 * cos(4.0f * PI * (i / (double) samples)));
-            window[i] = float((i % 2) ? ret : -ret) * 2;
-        }
-    }
-
-    ~testclass() {
-        volk_free(buf);
-        volk_free(iq);
-        volk_free(iq2);
-        volk_free(iq_out);
-        volk_free(psd);
-    }
-
-    void draw(FILE* file, file_data* data) {
-        if (counter % 5 == 0) {
-            update(file, data);
-        }
-        counter++;
-        ImPlot::BeginPlot("", ImVec2(-1, 0), ImPlotFlags_NoInputs);
-        ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 0);
-        ImPlot::PlotLine("", drawBuf, samples / factor);
-        ImPlot::EndPlot();
-    }
-
-    int counter = 0;
-    int samples;
-    int16_t* buf;
-    utils::complex* iq;
-    utils::complex* iq2;
-    utils::complex* iq_out;
-    float* psd;
-    float* window;
-    float* drawBuf;
-    dsp::fft_plan_ptr plan;
-
-};
-
-testclass* tc;
-FILE* file;
-std::shared_ptr<file_data> data;
+bool showMenu = true;
+float size = 0.2;
 
 void sdr_ui::init() {
-    int samples = 1024 * 16;
-    tc = new testclass(samples);
-
-    //std::string fileName = "D:/Downloads/ecars_net_7255_HDSDR_20180225_174354Z_7255kHz_RF.wav";
-    //std::string fileName = "D:/Downloads/15-29-07_92783258Hz.wav";
-    std::string fileName = "D:/Downloads/15-39-37_91303258Hz.wav";
-    fopen_s(&file, fileName.c_str(), "rb");
-    data = readWAV(file);
-
-    std::cout << "Center freq: " << data->centerFreq << std::endl;
-    std::cout << "Length: " << data->length << std::endl;
-
-    std::cout << "A Format: " << data->sampleData.AudioFormat << std::endl;
-    std::cout << "Channels: " << data->sampleData.NumOfChan << std::endl;
-    std::cout << "Samples Sec: " << data->sampleData.SamplesPerSec << std::endl;
-    std::cout << "bpSample: " << data->sampleData.bitsPerSample << std::endl;
-    std::cout << "allign: " << data->sampleData.blockAlign << std::endl;
-    std::cout << "byperSample: " << data->sampleData.bytesPerSec << std::endl;
-}
-
-void sdr_ui::draw() {
-    tc->draw(file, data.get());
 }
 
 void sdr_ui::deinit() {
-    fclose(file);
-    data.reset();
-    delete tc;
+}
+
+class UIBlock : public pipeline::block {
+
+public:
+
+    UIBlock() : pipeline::block("UI Sink", ImColor(0, 0, 255)) {
+        addInput("Renderer", utils::uiType(), uiFunc, [](int flags) {
+            std::cout << "Change " << flags << std::endl;
+        });
+    }
+
+    void start() override {
+    }
+
+    void stop() override {
+    }
+
+    void drawMiddle() override {
+    }
+
+    virtual void draw(size_t rand) {
+        if (uiFunc) {
+            (*uiFunc)(rand);
+        }
+    }
+
+private:
+
+    utils::drawFunc* uiFunc = nullptr;
+
+};
+
+pipeline::block_ptr sdr_ui::createUIBlock() {
+    return std::make_shared<UIBlock>();
+}
+
+void sdr_ui::draw(pipeline::schematic* nodes) {
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+    ImVec2 totalSize = ImGui::GetWindowSize();
+    auto leftPaneWidth = totalSize.x * size;
+    auto rightPaneWidth = totalSize.x * (1.0f - size);
+
+    if (showMenu) {
+        float splitterWidth = 4.0f;
+        ImGui::Splitter(true, splitterWidth, &leftPaneWidth, &rightPaneWidth, 0, 50);
+        ImGui::BeginChild("SubMenu", ImVec2(leftPaneWidth, totalSize.y));
+        nodes->forEachBlock([&](const pipeline::block_data& w) {
+            pipeline::block* block = w->getBlock();
+            if (block->hasMenu() && ImGui::CollapsingHeader(w->getType().c_str())) {
+                block->drawMenu();
+            }
+        });
+        if (ImGui::CollapsingHeader("Debug")) {
+            ImGui::Text("FPS: %.3f", ImGui::GetIO().Framerate);
+        }
+        ImGui::EndChild();
+        ImGui::SameLine();
+        size = std::min(leftPaneWidth / totalSize.x, 0.5f);
+        rightPaneWidth -= splitterWidth;
+    } else {
+        rightPaneWidth = totalSize.x;
+    }
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+    ImGui::BeginChild("Main", ImVec2(rightPaneWidth - 8, totalSize.y));
+//    ImVec2 smSize = ImGui::GetWindowSize();
+//    std::cout << smSize.x << " Main " << smSize.y << std::endl;
+    size_t rand = 0;
+    nodes->forEachBlock("UI", [&](const pipeline::block_data& block) {
+        ((UIBlock*) block->getBlock())->draw(rand);
+        rand += 1024;
+    });
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
 }
 

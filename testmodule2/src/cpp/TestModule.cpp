@@ -12,12 +12,17 @@ class TestBlockSI : public pipeline::block {
 public:
 
     TestBlockSI() : pipeline::block("TestBlock", ImColor(255, 0, 0)) {
-        TestBlockSI* si = this;
-        addInput("Din", utils::dataStreamType(), stream, [si](int flags) {
-            std::cout << (size_t) si <<  "Change " << flags << std::endl;
-        });
         data = (uint8_t*) malloc(2);
         data[0] = data[1] = 0;
+        drawFunc = [&](size_t) {
+            std::string str = "Hatseflats In:  " + std::to_string(data[0]) + " " + std::to_string(data[1]);
+            ImGui::TextUnformatted(str.c_str());
+        };
+        drawFuncRef = &drawFunc;
+        addInput("Din", utils::dataStreamType(), stream, [](int flags) {
+            std::cout << "Change " << flags << std::endl;
+        });
+        addOutput("Renderer", utils::uiType(), drawFuncRef, true);
     }
 
     ~TestBlockSI() {
@@ -25,6 +30,7 @@ public:
     }
 
     void start() override {
+        stopped = false;
         thread = std::thread([&]() {
             while (true) {
                 if (stopped) {
@@ -64,6 +70,8 @@ private:
     bool stopped = false;
     uint8_t * data;
     pipeline::datastream<uint8_t>* stream = nullptr;
+    utils::drawFunc drawFunc;
+    utils::drawFunc* drawFuncRef;
 
 };
 
@@ -85,6 +93,7 @@ public:
 
     void start() override {
         stream->start();
+        stopped = false;
         thread = std::thread([&]() {
             while (true) {
                 if (stopped) {
@@ -174,6 +183,8 @@ class Test : public ModuleInstance {
         nodeManager->registerBlockType("Test Block 1", createTestBlock);
         nodeManager->registerBlockType("Test Block Out", createStreamOutBlock);
         nodeManager->registerBlockType("Test Block In", createStreamInBlock);
+        nodeManager->registerBlockType("File Stream Block Out", createStreamFileBlock);
+        nodeManager->registerBlockType("FFT Block", createFFTBlock);
     }
 
 };

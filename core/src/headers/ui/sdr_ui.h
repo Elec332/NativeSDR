@@ -8,14 +8,18 @@
 #define IM_INTERNAL
 
 #include <NativeSDRGraphics.h>
+#include <pipeline/block/block.h>
+#include <pipeline/block/schematic.h>
 
 namespace sdr_ui {
 
     void init();
 
-    void draw();
+    void draw(pipeline::schematic* nodes);
 
     void deinit();
+
+    pipeline::block_ptr createUIBlock();
 
 }
 

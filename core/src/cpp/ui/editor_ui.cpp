@@ -12,6 +12,8 @@ namespace util = ax::NodeEditor::Utilities;
 
 static ImTextureID background = nullptr;
 
+static bool showPinId = false;
+
 void editor_ui::init() {
     background = ImGui::LoadTexture("assets/BlueprintBackground.png");
 }
@@ -44,21 +46,29 @@ void editor_ui::draw(pipeline::schematic* nodes) {
             builder.Input(id + input->getId());
             input->getType()->drawIcon(false);
             ImGui::Spring(0);
-            ImGui::TextUnformatted((input->getName() + " " + std::to_string(input->getId())).c_str());
+            std::string pin = input->getName();
+            if (showPinId) {
+                pin += " " + std::to_string(input->getId());
+            }
+            ImGui::TextUnformatted(pin.c_str());
             ImGui::Spring(0);
             builder.EndInput();
         }
 
         builder.Middle();
         block->getBlock()->drawMiddle();
-        ImGui::Spring(1, 0);
-        ImGui::TextUnformatted(("Hatseflats " + std::to_string(id)).c_str());
-        ImGui::Spring(1, 0);
+//        ImGui::Spring(1, 0);
+//        ImGui::TextUnformatted(("Hatseflats " + std::to_string(id)).c_str());
+//        ImGui::Spring(1, 0);
 
         for (auto& output: rb->getOutputs()) {
             builder.Output(id + output->getId());
             ImGui::Spring(0);
-            ImGui::TextUnformatted((output->getName() + " " + std::to_string(output->getId())).c_str());
+            std::string pin = output->getName();
+            if (showPinId) {
+                pin += " " + std::to_string(output->getId());
+            }
+            ImGui::TextUnformatted(pin.c_str());
             ImGui::Spring(0);
             output->getType()->drawIcon(false);
             builder.EndOutput();

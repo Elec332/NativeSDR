@@ -64,6 +64,13 @@ namespace pipeline {
 
         virtual void stop() = 0;
 
+        virtual bool hasMenu() {
+            return false;
+        }
+
+        virtual void drawMenu() {
+        }
+
         [[nodiscard]] const connection_list& getInputs() const {
             return inputs;
         };

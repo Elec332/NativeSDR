@@ -26,6 +26,4 @@ namespace dsp {
 
 }
 
-NATIVESDR_CORE_EXPORT utils::complex* malloc_complex(int length);
-
 #endif //NATIVESDR_FFT_H

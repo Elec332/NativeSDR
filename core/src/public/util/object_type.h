@@ -32,6 +32,8 @@ namespace utils {
     class object_type : public object_type_base {
     };
 
+    typedef std::function<void(size_t random)> drawFunc;
+
     NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<utils::complex>>* complexStreamType();
 
     NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<uint8_t>>* dataStreamType();
@@ -39,6 +41,10 @@ namespace utils {
     NATIVESDR_CORE_EXPORT const utils::object_type<utils::sampleData>* sampleDataType();
 
     NATIVESDR_CORE_EXPORT const utils::object_type<std::string>* stringType();
+
+    NATIVESDR_CORE_EXPORT const utils::object_type<utils::drawFunc>* uiType();
+
+    NATIVESDR_CORE_EXPORT const utils::object_type<uint32_t>* frequencyType();
 
 }
 

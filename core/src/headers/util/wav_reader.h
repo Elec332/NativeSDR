@@ -26,7 +26,7 @@ typedef struct sample_data {
 
 typedef struct file_data {
     sample_data sampleData{};
-    uint32_t centerFreq = -1;
+    uint32_t centerFreq = 0;
     uint32_t length = 0;
 } file_data;
 
