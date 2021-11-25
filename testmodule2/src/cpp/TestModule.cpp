@@ -5,7 +5,6 @@
 #define IM_INTERNAL
 
 #include <module/SDRModule.h>
-#include <testbase.h>
 #include <TestModule.h>
 
 class TestBlockSI : public pipeline::block {

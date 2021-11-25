@@ -56,6 +56,8 @@ int startCore(int argc, char* argv[]) {
     return 0;
 }
 
-void test() {
+int testerrr() {
+    std::cout << "Jopoooo" << std::endl;
+    return 7;
 }
 
