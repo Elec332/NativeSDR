@@ -16,7 +16,5 @@ add_subdirectory("main")
 add_subdirectory("core")
 add_subdirectory("module_manager")
 add_subdirectory("graphics")
-add_subdirectory("testbase")
 
-#add_subdirectory("testmodule")
 add_subdirectory("testmodule2")
