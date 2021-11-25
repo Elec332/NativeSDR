@@ -12,6 +12,7 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <json/json.hpp>
 
 #define MAX_BLOCK_PINS 31
 
@@ -85,17 +86,23 @@ namespace pipeline {
 
         virtual void drawMiddle() = 0;
 
+        virtual void toJson(nlohmann::json& json) const {
+        }
+
+        virtual void readJson(const nlohmann::json& json) {
+        }
+
     protected:
 
         template<class T>
         void addInput(std::string name, const utils::object_type<T>* type, T*& object, const pipeline::connection_callback& callback, uint8_t id) {
-            inputs.push_front(pipeline::block_connection_base_instance::createBlockConnection(name, type, object, callback, false, id));
+            inputs.push_back(pipeline::block_connection_base_instance::createBlockConnection(name, type, object, callback, false, id));
         }
 
         template<class T>
         connection_callback addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi, uint8_t id) {
             block_connection_base conn = pipeline::block_connection_base_instance::createBlockConnection(name, type, object, nullptr, multi, id);
-            outputs.push_front(conn);
+            outputs.push_back(conn);
             return [conn](int flags) {
                 conn->onValueChanged(flags);
             };
@@ -109,6 +116,11 @@ namespace pipeline {
         template<class T>
         connection_callback addOutput(std::string name, const utils::object_type<T>* type, T*& object, bool multi) {
             return addOutput(name, type, object, multi, pinCounter++);
+        }
+
+        template<class T>
+        void addInput(std::string name, const utils::object_type<T>* type, T*& object) {
+            addInput(name, type, object, nullptr);
         }
 
     private:

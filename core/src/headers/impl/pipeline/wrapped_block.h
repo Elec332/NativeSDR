@@ -26,7 +26,7 @@ public:
 
 };
 
-wrapped_block fromFactory(pipeline::block_factory factory, size_t id, const std::string& type);
+wrapped_block fromFactory(const pipeline::block_factory& factory, size_t id, const std::string& type);
 
 wrapped_block fromJson(const nlohmann::json& json, pipeline::node_manager* nodeManager);
 

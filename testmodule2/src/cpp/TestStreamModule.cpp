@@ -7,6 +7,8 @@
 #include <dsp/fft.h>
 #include <dsp/iq_converter.h>
 #include <dsp/malloc.h>
+#include <dsp/windows.h>
+#include <util/chart_helper.h>
 #include "../../../core/src/headers/util/wav_reader.h"
 
 class FFTTestBlock : public pipeline::threaded_block {
@@ -18,21 +20,22 @@ public:
 
     FFTTestBlock() : pipeline::threaded_block("FFT Block", ImColor(255, 0, 0)) {
         drawFunc = [&](size_t random) {
-            std::string str = "##" + std::to_string(random);
-            ImPlot::SetNextAxisToFit(ImAxis_X1);
-            ImPlot::BeginPlot(str.c_str(), ImVec2(-1, 0), ImPlotFlags_NoInputs);
-            ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 0);
-            if (stream != nullptr && stream->auxData != nullptr) {
-                ImPlot::SetupAxisFormat(ImAxis_X1, formatTag, this);
+            uint64_t f = 0;;
+            if (freq) {
+                f = *freq;
             }
-            ImPlot::PlotLine(str.c_str(), drawBuf, drawSamples);
-            ImPlot::EndPlot();
+            double bandwidth = 100000;
+            auto hBw = std::abs(bandwidth / 2);
+            ImVec2 start = ImGui::GetWindowPos();
+            ImVec2 end = start + ImGui::GetWindowSize();
+            ImVec2 ppu = ImGui::DrawChartFrame(start, end, -100, 0, utils::ui::getDbScale, f - hBw, f + hBw, utils::ui::getFreqScale);
+            ImGui::DrawChartLineFilled(start, end, drawBuf, drawSamples, ppu, -100, utils::ui::BLUE, utils::ui::BLUE_F);
+//            utils::ui::drawFFTChart(drawBuf, drawSamples, -100, 0, (double) start, 100000);
         };
         drawFuncRef = &drawFunc;
-        addInput("IQ in", utils::complexStreamType(), stream, [](int flags) {
-            std::cout << "Change " << flags << std::endl;
-        });
+        addInput("IQ in", utils::complexStreamType(), stream);
         addOutput("Renderer", utils::uiType(), drawFuncRef, true);
+        addInput("Frequency in", utils::frequencyType(), freq);
 
         int samples = 1024 * 128;
         iq = dsp::malloc<utils::complex>(samples);
@@ -50,54 +53,18 @@ public:
         dsp::free(psd);
     }
 
-    static void formatTag(double value, char* buf, int len, void* data) {
-        auto thiz = (FFTTestBlock*) data;
-        auto sampleData = (utils::sampleData*) thiz->stream->auxData;
-        double vpi = (double) sampleData->bandwidth / thiz->drawSamples;
-        value -= (double) thiz->drawSamples / 2;
-        double val = sampleData->centerFreq + (value * vpi);
-        formatFrequency(val, buf, len);
-    }
-
-    static void formatFrequency(double freq, char* buf, int bufLen) {
-        if (bufLen < 8) {
-            buf[0] = 'X';
-            return;
-        }
-        std::string postFix;
-        double test = std::abs(freq);
-        if (test > 1000000000) {
-            postFix = "GHz";
-            freq /= 1000000000;
-        } else if (test > 1000000) {
-            postFix = "MHz";
-            freq /= 1000000;
-        } else if (test > 1000) {
-            postFix = "KHz";
-            freq /= 1000;
-        } else {
-            postFix = "Hz";
-        }
-        postFix = "%.2f " + postFix;
-        snprintf(buf, bufLen, postFix.c_str(), freq);
-    }
-
     void loop() override {
         if (stream) {
             stream->read([&](utils::complex* dat, int samples) {
-                volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq, (lv_32fc_t*) dat, window, samples);
+                dsp::WindowFunction windowFunc = dsp::squareWindow;
                 if (lastSamples != samples) {
                     for (int i = 0; i < samples; i++) {
-                        window[i] = (i % 2) ? 1 : -1;
-//                      double alpha = 0.16;
-//                      double a0 = (1.0f - alpha) / 2.0f;
-//                      double a2 = alpha / 2.0f;
-//                      double ret = a0 - (0.5f * cos(2.0f * PI * (i / (double) samples))) + (a2 * cos(4.0f * PI * (i / (double) samples)));
-//                      window[i] = float((i % 2) ? ret : -ret) * 2;
+                        window[i] = windowFunc(i, samples);
                     }
                     plan = dsp::create_plan(samples, iq, fft, true);
                     lastSamples = samples;
                 }
+                volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq, (lv_32fc_t*) dat, window, samples);
                 plan->execute();
                 volk_32fc_s32f_power_spectrum_32f(psd, (lv_32fc_t*) fft, (float) samples, samples);
                 int offset = 0;
@@ -124,6 +91,7 @@ public:
 private:
 
     pipeline::datastream<utils::complex>* stream = nullptr;
+    uint64_t* freq = nullptr;
     utils::drawFunc drawFunc;
     utils::drawFunc* drawFuncRef;
 
@@ -188,7 +156,7 @@ public:
         });
         int base = 1000 * 1000;
 
-        std::this_thread::sleep_for(std::chrono::microseconds ((base * samples) / data->sampleData.SamplesPerSec));
+        std::this_thread::sleep_for(std::chrono::microseconds((base * samples) / data->sampleData.SamplesPerSec));
     }
 
     void start() override {

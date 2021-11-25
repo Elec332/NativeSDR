@@ -14,7 +14,7 @@ public:
 
     virtual void save(nlohmann::json& json) const = 0;
 
-    virtual void load(nlohmann::json& json) = 0;
+    virtual void load(const nlohmann::json& json) = 0;
 
     virtual bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block_instance* blockA, ax::NodeEditor::PinId pinB, wrapped_block_instance* blockB) = 0;
 

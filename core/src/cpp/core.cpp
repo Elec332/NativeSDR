@@ -32,6 +32,8 @@ int startCore(int argc, char* argv[]) {
 
     pipeline::node_manager* nodeManager = newNodeManager();
     nodeManager->registerBlockType("UI", sdr_ui::createUIBlock);
+    nodeManager->registerBlockType("Frequency Chooser", main_window::createFrequencyBlock);
+    register_ui_components(nodeManager);
     for (const auto& p: modules) {
         ModuleInstance* i = p->createModuleContainer();
         std::cout << "Loading module: " << i->getName() << std::endl;

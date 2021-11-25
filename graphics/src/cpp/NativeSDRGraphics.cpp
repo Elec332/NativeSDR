@@ -3,6 +3,7 @@
 //
 
 #define IM_INTERNAL
+
 #include "NativeSDRGraphics.h"
 
 #include "imgui/imgui_impl_glfw.h"
@@ -21,7 +22,7 @@ static void glfw_error_callback(int error, const char* description) {
 
 GLFWwindow* window_GLFW;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+ImFont* defaultFont;
 
 int NativeGraphics::setupGraphics() {
     glfwSetErrorCallback(glfw_error_callback);
@@ -61,7 +62,10 @@ int NativeGraphics::setupGraphics() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImPlot::SetImGuiContext(ImGui::GetCurrentContext());
+    ImGuiIO& io = ImGui::GetIO();
+    (void) io;
+    defaultFont = io.Fonts->AddFontDefault();
 
     ImGui::StyleColorsDark();
 
@@ -81,9 +85,11 @@ void NativeGraphics::startRender() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGui::PushFont(defaultFont);
 }
 
 void NativeGraphics::endRender() {
+    ImGui::PopFont();
     ImGui::Render();
     int display_w, display_h;
     glfwGetFramebufferSize(window_GLFW, &display_w, &display_h);
@@ -117,7 +123,7 @@ void ImGui::FocusCurrentWindow() {
 
 #define STB_IMAGE_IMPLEMENTATION
 extern "C" {
-    #include "stb/stb_image.h"
+#include "stb/stb_image.h"
 }
 
 struct TexInfo {
@@ -130,9 +136,26 @@ static std::vector<TexInfo> g_Textures;
 
 static std::vector<TexInfo>::iterator findTexture(ImTextureID texture) {
     auto textureID = static_cast<GLuint>(reinterpret_cast<std::intptr_t>(texture));
-    return std::find_if(g_Textures.begin(), g_Textures.end(), [textureID](TexInfo& texture){
+    return std::find_if(g_Textures.begin(), g_Textures.end(), [textureID](TexInfo& texture) {
         return texture.texID == textureID;
     });
+}
+
+void UpdateTexture(TexInfo& texture, const void* data, int width, int height) {
+    glBindTexture(GL_TEXTURE_2D, texture.texID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    texture.width = width;
+    texture.height = height;
+}
+
+void ImGui::UpdateTexture(ImTextureID texture, const void* data, int width, int height) {
+    auto textureIt = findTexture(texture);
+    if (textureIt != g_Textures.end()) {
+        UpdateTexture(&textureIt, data, width, height);
+    }
 }
 
 ImTextureID ImGui::CreateTexture(const void* data, int width, int height) {
@@ -143,15 +166,9 @@ ImTextureID ImGui::CreateTexture(const void* data, int width, int height) {
     GLint last_texture = 0;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGenTextures(1, &texture.texID);
-    glBindTexture(GL_TEXTURE_2D, texture.texID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    UpdateTexture(texture, data, width, height);
+
     glBindTexture(GL_TEXTURE_2D, last_texture);
-
-    texture.width  = width;
-    texture.height = height;
-
     return reinterpret_cast<ImTextureID>(static_cast<std::intptr_t>(texture.texID));
 }
 
@@ -224,4 +241,37 @@ bool ImGui::ImageButtonWhite(const char* str_id, const ImVec2& size, const ImTex
     }
     drawList->AddImage(texture, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ImVec2(0, 0), ImVec2(1, 1), color);
     return ret;
+}
+
+ImFont* ImGui::AddDefaultFont(float size) {
+    ImFontConfig config;
+    config.SizePixels = size;
+    config.OversampleH = config.OversampleV = 1;
+    config.PixelSnapH = true;
+    return ImGui::GetIO().Fonts->AddFontDefault(&config);
+}
+
+void ImGui::FillBox(ImU32 col) {
+    ImVec2 start = ImGui::GetWindowPos();
+    ImGui::GetWindowDrawList()->AddRectFilled(start, start + ImGui::GetWindowSize(), col);
+}
+
+static void formatTag(double value, char* buf, int len, void* data) {
+    auto tagger = (std::function<void(double, char*, int)>*) data;
+    (*tagger)(value, buf, len);
+}
+
+void ImPlot::DrawImPlotChart(size_t id, const float* points, int pointCount, double yMin, double yMax, std::function<void(double, char*, int)>& xTags) {
+    std::string str = "##" + std::to_string(id);
+
+    ImPlot::SetNextAxisToFit(ImAxis_X1);
+    if (ImPlot::BeginPlot(str.c_str(), ImVec2(-1, 0), ImPlotFlags_NoInputs)) {
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 0);
+        if (xTags != nullptr) {
+            ImPlot::SetupAxisFormat(ImAxis_X1, formatTag, &xTags);
+        }
+        ImPlot::SetupFinish();
+        ImPlot::PlotLine(str.c_str(), points, pointCount);
+        ImPlot::EndPlot();
+    }
 }

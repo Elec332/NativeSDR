@@ -17,6 +17,8 @@ namespace main_window {
 
     void start(pipeline::schematic** nodes);
 
+    pipeline::block_ptr createFrequencyBlock();
+
 }
 
 #endif //NATIVESDR_MAIN_WINDOW_H

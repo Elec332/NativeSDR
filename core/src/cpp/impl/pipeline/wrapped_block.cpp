@@ -10,8 +10,8 @@ class wbii : public wrapped_block_instance {
 
 public:
 
-    wbii(pipeline::block_factory factory, size_t id, std::string type) : block(factory()), ID(id),
-                                                                         type(std::move(type)) {
+    wbii(const pipeline::block_factory& factory, size_t id, std::string type) :
+            block(factory()), ID(id), type(std::move(type)) {
     }
 
     [[nodiscard]] pipeline::block* getBlock() const override {
@@ -24,6 +24,11 @@ public:
         ret["id"] = ID;
         ret["x"] = x;
         ret["y"] = y;
+        nlohmann::json data;
+        block->toJson(data);
+        if (!data.empty()) {
+            ret["data"] = data;
+        }
         return ret;
     }
 
@@ -66,7 +71,7 @@ private:
 
 };
 
-wrapped_block fromFactory(pipeline::block_factory factory, size_t id, const std::string& type) {
+wrapped_block fromFactory(const pipeline::block_factory& factory, size_t id, const std::string& type) {
     return std::make_shared<wbii>(factory, id, type);
 }
 
@@ -77,6 +82,12 @@ wrapped_block fromJson(const nlohmann::json& json, pipeline::node_manager* nodeM
         return nullptr;
     }
     wrapped_block ret = std::make_shared<wbii>(factory, json["id"].get<size_t>(), type);
+    if (json.contains("data")) {
+        nlohmann::json data = json["data"];
+        if (!data.empty()) {
+            ret->getBlock()->readJson(data);
+        }
+    }
     ret->x = json["x"].get<float>();
     ret->y = json["y"].get<float>();
     return ret;

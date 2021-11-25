@@ -10,7 +10,7 @@
 
 namespace pipeline {
 
-    typedef pipeline::block_ptr(* block_factory)();
+    typedef std::function<pipeline::block_ptr()> block_factory;
 
     class node_manager {
 
@@ -18,7 +18,7 @@ namespace pipeline {
 
         virtual void registerBlockType(std::string name, pipeline::block_factory factory) = 0;
 
-        virtual pipeline::block_factory getFactory(std::string name) = 0;
+        virtual const pipeline::block_factory& getFactory(std::string name) = 0;
 
         virtual void forEachFactory(const std::function<void(const std::string&)>& func) = 0;
 

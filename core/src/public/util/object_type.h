@@ -44,7 +44,7 @@ namespace utils {
 
     NATIVESDR_CORE_EXPORT const utils::object_type<utils::drawFunc>* uiType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<uint32_t>* frequencyType();
+    NATIVESDR_CORE_EXPORT const utils::object_type<uint64_t>* frequencyType();
 
 }
 

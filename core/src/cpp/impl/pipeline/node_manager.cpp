@@ -12,7 +12,7 @@ public:
         factories[name] = factory;
     }
 
-    pipeline::block_factory getFactory(std::string name) override {
+    const pipeline::block_factory& getFactory(std::string name) override {
         return factories[name];
     }
 

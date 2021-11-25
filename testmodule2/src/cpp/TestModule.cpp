@@ -3,6 +3,7 @@
 //
 
 #define IM_INTERNAL
+
 #include <module/SDRModule.h>
 #include <testbase.h>
 #include <TestModule.h>
@@ -68,7 +69,7 @@ private:
 
     std::thread thread;
     bool stopped = false;
-    uint8_t * data;
+    uint8_t* data;
     pipeline::datastream<uint8_t>* stream = nullptr;
     utils::drawFunc drawFunc;
     utils::drawFunc* drawFuncRef;
@@ -130,7 +131,7 @@ private:
 
     std::thread thread;
     bool stopped = false;
-    uint8_t * data;
+    uint8_t* data;
     pipeline::datastream<uint8_t>* stream;
 
 };
@@ -179,7 +180,7 @@ class Test : public ModuleInstance {
         return "testModule2";
     }
 
-    void init(pipeline::node_manager *nodeManager) override {
+    void init(pipeline::node_manager* nodeManager) override {
         nodeManager->registerBlockType("Test Block 1", createTestBlock);
         nodeManager->registerBlockType("Test Block Out", createStreamOutBlock);
         nodeManager->registerBlockType("Test Block In", createStreamInBlock);

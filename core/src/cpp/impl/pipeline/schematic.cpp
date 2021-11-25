@@ -63,7 +63,7 @@ public:
         if (running) {
             std::list<std::future<void>> joinPool;
             forEachBlock([&](const pipeline::block_data& block) {
-                joinPool.push_front(std::async(std::launch::async, [block]() {
+                joinPool.push_back(std::async(std::launch::async, [block]() {
                     block->getBlock()->stop();
                 }));
             });
@@ -140,7 +140,7 @@ public:
         }
     }
 
-    void load(nlohmann::json& json) {
+    void load(const nlohmann::json& json) {
         ax::NodeEditor::SetCurrentEditor(getEditor());
         size_t max = 32;
         for (const auto& element: json) {
@@ -327,7 +327,7 @@ public:
         }
     }
 
-    void load(nlohmann::json& json) override {
+    void load(const nlohmann::json& json) override {
         pinToLinks.clear();
         links.clear();
         linkCounter = LINK_COUNTER_START;

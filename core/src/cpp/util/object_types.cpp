@@ -56,7 +56,7 @@ stream_type<uint8_t> data_stream("Data Stream", drawComplexStream);
 simple_type<utils::sampleData> sample_data("SDR Data", drawComplexStream);
 simple_type<std::string> string_data("String", drawStringType);
 simple_type<utils::drawFunc> ui("UI", drawUIType);
-simple_type<uint32_t> freq("Frequency", drawFrequencyType);
+simple_type<uint64_t> freq("Frequency", drawFrequencyType);
 
 const utils::object_type<pipeline::datastream<utils::complex>>* utils::complexStreamType() {
     return &complex_stream;
@@ -78,6 +78,6 @@ const utils::object_type<utils::drawFunc>* utils::uiType() {
     return &ui;
 }
 
-const utils::object_type<uint32_t>* utils::frequencyType() {
+const utils::object_type<uint64_t>* utils::frequencyType() {
     return &freq;
 }

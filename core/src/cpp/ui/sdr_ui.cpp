@@ -53,7 +53,7 @@ pipeline::block_ptr sdr_ui::createUIBlock() {
 }
 
 void sdr_ui::draw(pipeline::schematic* nodes) {
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
     ImVec2 totalSize = ImGui::GetWindowSize();
     auto leftPaneWidth = totalSize.x * size;
     auto rightPaneWidth = totalSize.x * (1.0f - size);
@@ -78,7 +78,7 @@ void sdr_ui::draw(pipeline::schematic* nodes) {
     } else {
         rightPaneWidth = totalSize.x;
     }
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+    //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
     ImGui::BeginChild("Main", ImVec2(rightPaneWidth - 8, totalSize.y));
 //    ImVec2 smSize = ImGui::GetWindowSize();
 //    std::cout << smSize.x << " Main " << smSize.y << std::endl;
@@ -88,7 +88,7 @@ void sdr_ui::draw(pipeline::schematic* nodes) {
         rand += 1024;
     });
     ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
 }
 

@@ -18,7 +18,7 @@ namespace utils {
 
     typedef struct sampleData {
 
-        uint32_t centerFreq;
+        uint64_t centerFreq;
         uint32_t sampleRate;
         uint32_t offset;
         uint32_t bandwidth;
