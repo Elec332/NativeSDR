@@ -26,15 +26,14 @@ public:
         if (stopped) {
             return false;
         }
+        int len = writer(writeBuf);
         std::unique_lock<std::mutex> raii(writeMutex);
-        {
-            std::unique_lock<std::mutex> raii2(readCountMutex); //Keep cycling to avoid SDR overflows
+        { //Keep cycling to avoid SDR overflows
+            std::unique_lock<std::mutex> raii2(readCountMutex);
             if (!readDone && readers == 0) {
-                readDone = true;
-                writeDone = false;
+                return true;
             }
         }
-        int len = writer(writeBuf);
         writeWait.wait(raii, [&] {
             return readDone || stopped;
         });
@@ -46,10 +45,10 @@ public:
         readBuf = writeBuf;
         writeSize = len;
         writeBuf = temp;
-        writeDone = true;
+        readDone = false;
         {
             std::unique_lock<std::mutex> raii2(readMutex);
-            readDone = false;
+            writeDone = true;
         }
         readWait.notify_all();
         return true;
@@ -75,10 +74,10 @@ public:
         }
         {
             std::unique_lock<std::mutex> raii2(writeMutex);
-            writeDone = false;
+            readDone = true;
         }
         readFinished.clear();
-        readDone = true;
+        writeDone = false;
         writeWait.notify_all();
         return true;
     }
@@ -109,11 +108,11 @@ private:
 
     std::mutex writeMutex;
     std::condition_variable writeWait{};
-    bool writeDone = false;
+    bool readDone = true;
 
     std::mutex readMutex;
     std::condition_variable readWait{};
-    bool readDone = true;
+    bool writeDone = false;
 
     bool stopped = false;
 
@@ -130,4 +129,3 @@ pipeline::datastream<void>* pipeline::createUnknownStream(int size) {
 void pipeline::deleteUnknownStream(pipeline::datastream<void>* stream) {
     delete (stream_impl<void>*) stream;
 }
-
