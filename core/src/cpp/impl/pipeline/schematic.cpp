@@ -110,9 +110,6 @@ public:
     }
 
     void load() {
-        if (!exists(path)) {
-            return;
-        }
         std::scoped_lock<std::mutex> guard(saveLock);
         loading = true;
         stop();
@@ -121,7 +118,10 @@ public:
             ax::NodeEditor::DestroyEditor(ctx);
         }
         ctx = ax::NodeEditor::CreateEditor(cfg);
-
+        if (!exists(path)) {
+            loading = false;
+            return;
+        }
         std::ifstream ifs(path);
         nlohmann::json json = nlohmann::json::parse(ifs);
         nlohmann::json nodes = json["nodes"];

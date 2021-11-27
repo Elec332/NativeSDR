@@ -9,10 +9,19 @@
 
 bool showEditor = false;
 uint64_t oldFrequency = 0;
-uint64_t frequency = 93609674;
+uint64_t frequency = 99109674;
 uint64_t* freqRef = &frequency;
 uint8_t drawer[FREQUENCY_NUMBERS];
 ImFont* big;
+
+pipeline::connection_callback callback = nullptr;
+
+void runCallBack() {
+    oldFrequency = frequency;
+    if (callback) {
+        callback(1);
+    }
+}
 
 void checkFrequency() {
     if (frequency != oldFrequency) {
@@ -22,7 +31,7 @@ void checkFrequency() {
             temp -= i;
             temp /= 10;
         }
-        oldFrequency = frequency;
+        runCallBack();
     }
 }
 
@@ -88,7 +97,7 @@ void drawFreqChooser() {
                 for (int j = 0; j < FREQUENCY_NUMBERS; ++j) {
                     frequency += (uint32_t) (drawer[j] * std::pow(10, j));
                 }
-                oldFrequency = frequency;
+                runCallBack();
             }
             hovered = true;
         }
@@ -151,13 +160,13 @@ void main_window::deinit() {
 void main_window::start(pipeline::schematic** nodes) {
     NativeGraphics::startMainWindow(drawmain, nodes);
 }
-
 class FreqBlock : public pipeline::block {
 
 public:
 
     explicit FreqBlock(uint64_t*& freq) : pipeline::block("Frequency Chooser", ImColor(255, 255, 0)) {
-        addOutput("Frequency", utils::frequencyType(), freq, true);
+        std::cout << "NEWFC" << std::endl;
+        callback = addOutput("Frequency", utils::frequencyType(), freq, true);
     }
 
     void start() override {
@@ -170,7 +179,8 @@ public:
     }
 
 };
+pipeline::block_ptr mainFB = std::make_shared<FreqBlock>(freqRef);
 
 pipeline::block_ptr main_window::createFrequencyBlock() {
-    return std::make_shared<FreqBlock>(freqRef);
+    return mainFB;
 }

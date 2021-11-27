@@ -2,8 +2,6 @@
 // Created by Elec332 on 10/07/2021.
 //
 
-#define IM_INTERNAL
-
 #include <module/SDRModule.h>
 #include <TestModule.h>
 

@@ -19,3 +19,4 @@ add_subdirectory("module_manager")
 add_subdirectory("graphics")
 
 add_subdirectory("testmodule2")
+add_subdirectory("rtl-sdr")

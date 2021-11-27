@@ -11,6 +11,7 @@ useLibrary(NativeSDR_graphics)
 createSharedLibrary(fftw USE FILE libfftw3f-3 INSTALL /)
 createSharedLibrary(volk USE PUBLIC INSTALL /)
 useHeaderLibrary(json)
+createSharedLibrary(libusb FILE libusb-1.0 PUBLIC INSTALL / GLOBAL)
 
 #########################
 

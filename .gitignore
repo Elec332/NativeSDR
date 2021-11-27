@@ -1,10 +1,9 @@
 *.db
-build/
 build.bat
 classes/
 
 # eclipse
-bin
+/bin
 *.launch
 .settings
 .metadata
@@ -13,18 +12,21 @@ bin
 
 
 # idea
-out
+/out
 *.ipr
 *.iws
 *.iml
 .idea
 
 # gradle
-build
+/build
 .gradle
 
 # other
-eclipse
-run
+/eclipse
+/run
 
 setup.bat
+
+/cmake-build-release
+/cmake-build-debug

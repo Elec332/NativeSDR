@@ -20,17 +20,33 @@ public:
 
     FFTTestBlock() : pipeline::threaded_block("FFT Block", ImColor(255, 0, 0)) {
         drawFunc = [&](size_t random) {
-            uint64_t f = 0;;
+            double f = 0;
             if (freq) {
-                f = *freq;
+                f = (double) *freq;
             }
             double bandwidth = 100000;
+            double sr = bandwidth;
+            if (stream && stream->auxData) {
+                f = (double) ((utils::sampleData*) stream->auxData)->centerFreq;
+                bandwidth = ((utils::sampleData*) stream->auxData)->bandwidth;
+                sr = ((utils::sampleData*) stream->auxData)->sampleRate;
+            }
+            int skip = 0;
+            if (sr > bandwidth) {
+                auto diff = sr - bandwidth;
+                auto iPerD = sr / drawSamples;
+                skip = (int) std::ceil((diff / bandwidth) * drawSamples);
+                if (skip % 2 != 0) {
+                    skip++;
+                }
+                bandwidth = (drawSamples - skip) * iPerD;
+            }
             auto hBw = std::abs(bandwidth / 2);
             ImVec2 start = ImGui::GetWindowPos();
             ImVec2 end = start + ImGui::GetWindowSize();
             ImVec2 ppu = ImGui::DrawChartFrame(start, end, -100, 0, utils::ui::getDbScale, f - hBw, f + hBw, utils::ui::getFreqScale);
-            ImGui::DrawChartLineFilled(start, end, drawBuf, drawSamples, ppu, -100, utils::ui::BLUE, utils::ui::BLUE_F);
-//            utils::ui::drawFFTChart(drawBuf, drawSamples, -100, 0, (double) start, 100000);
+
+            ImGui::DrawChartLineFilled(start, end, drawBuf + (skip / 2), drawSamples - skip, ppu, -100, utils::ui::BLUE, utils::ui::BLUE_F, true);
         };
         drawFuncRef = &drawFunc;
         addInput("IQ in", utils::complexStreamType(), stream);

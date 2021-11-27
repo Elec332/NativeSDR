@@ -98,9 +98,9 @@ namespace ImGui {
 
     NATIVESDR_GRAPHICS_EXPORT ImVec2 DrawChartFrame(ImVec2& start, ImVec2& end, double yStart, double yStop, const std::function<std::string(double)>& yLabel, double xStart, double xStop, const std::function<std::string(double)>& xLabel);
 
-    NATIVESDR_GRAPHICS_EXPORT void DrawChartLine(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col);
+    NATIVESDR_GRAPHICS_EXPORT void DrawChartLine(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, bool inverted = false);
 
-    NATIVESDR_GRAPHICS_EXPORT void DrawChartLineFilled(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, ImU32 colInside);
+    NATIVESDR_GRAPHICS_EXPORT void DrawChartLineFilled(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, ImU32 colInside, bool inverted = false);
 
 }
 

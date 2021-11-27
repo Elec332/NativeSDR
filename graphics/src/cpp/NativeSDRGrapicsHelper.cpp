@@ -104,7 +104,7 @@ ImVec2 ImGui::DrawChartFrame(ImVec2& start, ImVec2& end, double yStart, double y
     return {(float) xPixPerUnit, (float) yPixPerUnit};
 }
 
-void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, bool inside, ImU32 colInside) {
+void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, bool inside, ImU32 colInside, bool inverted) {
     if (pointCount < 2) {
         return;
     }
@@ -112,14 +112,22 @@ void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points,
     ppu.x = (end.x - start.x) / (float) pointCount;
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-    ImVec2 poly[4] = {{start.x + ppu.x, (float) (end.y - ((points[0] - yStart) * ppu.y))},
+    int startIndex = inverted ? pointCount - 1 : 0;
+
+    ImVec2 poly[4] = {{start.x + ppu.x, (float) (end.y - ((points[startIndex] - yStart) * ppu.y))},
                       {start.x,         0},
                       {0,               end.y},
                       {poly[0].x,       end.y}};
+    int index = startIndex;
     ImVec2& lineStart = poly[0];
     ImVec2& lineEnd = poly[1];
-    for (int i = 1; i < pointCount; ++i) {
-        lineEnd.y = end.y - (float) ((points[i] - yStart) * ppu.y);
+    while (true) {
+        if (inverted) {
+            index--;
+        } else {
+            index++;
+        }
+        lineEnd.y = end.y - (float) ((points[index] - yStart) * ppu.y);
         lineEnd.x += ppu.x * 2;
         if (inside) {
             poly[2].x = lineEnd.x;
@@ -128,13 +136,16 @@ void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points,
         }
         drawList->AddPolyline(poly, 2, col, 0, 1);
         std::swap(lineStart, lineEnd);
+        if (index >= (pointCount - 1) || index <= 0) {
+            break;
+        }
     }
 }
 
-void ImGui::DrawChartLine(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col) {
-    drawChartLines(start, end, points, pointCount, partsPerUnit, yStart, col, false, 0);
+void ImGui::DrawChartLine(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, bool inverted) {
+    drawChartLines(start, end, points, pointCount, partsPerUnit, yStart, col, false, 0, inverted);
 }
 
-void ImGui::DrawChartLineFilled(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, ImU32 colInside) {
-    drawChartLines(start, end, points, pointCount, partsPerUnit, yStart, col, true, colInside);
+void ImGui::DrawChartLineFilled(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, ImU32 colInside, bool inverted) {
+    drawChartLines(start, end, points, pointCount, partsPerUnit, yStart, col, true, colInside, inverted);
 }
