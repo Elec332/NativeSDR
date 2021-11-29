@@ -13,10 +13,10 @@ fetchGTest(VERSION release-1.11.0)
 #setCentralOutput()
 forceX64()
 
-add_subdirectory("main")
-add_subdirectory("core")
 add_subdirectory("module_manager")
 add_subdirectory("graphics")
+add_subdirectory("core")
+add_subdirectory("main")
 
 add_subdirectory("testmodule2")
 add_subdirectory("rtl-sdr")

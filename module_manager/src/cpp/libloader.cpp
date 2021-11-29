@@ -88,6 +88,9 @@ std::list<libloader::library> libloader::loadFolder(const std::string &path) {
 
 std::list<libloader::library> libloader::loadFolder(const std::filesystem::path &path) {
     std::list<libloader::library> libs;
+    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
+        return libs;
+    }
     std::list<std::string> files;
     for (auto const &dir_entry: std::filesystem::directory_iterator(path)) {
         if (!std::filesystem::exists(dir_entry) || !std::filesystem::is_regular_file(dir_entry)) {
