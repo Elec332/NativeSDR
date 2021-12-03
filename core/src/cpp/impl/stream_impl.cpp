@@ -13,8 +13,8 @@ class stream_impl : public pipeline::datastream<T> {
 public:
 
     explicit stream_impl(int size) {
-        writeBuf = dsp::malloc(1024 * size * 128);
-        readBuf = dsp::malloc(1024 * size * 128);
+        writeBuf = dsp::malloc(pipeline::BUFFER_COUNT * size);
+        readBuf = dsp::malloc(pipeline::BUFFER_COUNT * size);
     }
 
     ~stream_impl() {
@@ -54,24 +54,29 @@ public:
         return true;
     }
 
-    bool read(const std::function<void(T*, int)>& reader) override {
+    bool read(const std::function<void(const T*, int)>& reader) override {
         if (stopped) {
             return false;
         }
-        std::unique_lock<std::mutex> raii(readMutex);
-        readWait.wait(raii, [&] {
-            return writeDone || stopped;
-        });
-        if (stopped) {
-            return false;
+        {
+            std::unique_lock<std::mutex> raii(readMutex);
+            readWait.wait(raii, [&] {
+                return writeDone || stopped;
+            });
+            if (stopped) {
+                return false;
+            }
         }
 
         reader(readBuf, writeSize);
-        std::unique_lock<std::mutex> raii3(readCountMutex);
-        readFinished.insert((size_t) &reader);
-        if (readFinished.size() != readers) {
-            return true;
+        {
+            std::unique_lock<std::mutex> raii3(readCountMutex);
+            readFinished.insert((size_t) &reader);
+            if (readFinished.size() != readers) {
+                return true;
+            }
         }
+        std::unique_lock<std::mutex> raii(readMutex);
         {
             std::unique_lock<std::mutex> raii2(writeMutex);
             readDone = true;

@@ -13,6 +13,8 @@
 
 namespace pipeline {
 
+    const size_t BUFFER_COUNT = 1024 * 128;
+
     template<class T>
     class datastream {
 
@@ -39,7 +41,7 @@ namespace pipeline {
          * @param reader The data reader
          * @return Whether the data was read (false if e.g. stream stopped)
          */
-        virtual bool read(const std::function<void(T*, int)>& reader) = 0;
+        virtual bool read(const std::function<void(const T*, int)>& reader) = 0;
 
         /**
          * (Re)starts the stream
