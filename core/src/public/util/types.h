@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#define PI_DSP 3.14159265358979323846
+
 namespace utils {
 
     typedef struct complex {
@@ -20,7 +22,6 @@ namespace utils {
 
         uint64_t centerFreq;
         uint32_t sampleRate;
-        uint32_t offset;
         uint32_t bandwidth;
 
     } sampleData;

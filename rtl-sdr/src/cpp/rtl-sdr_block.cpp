@@ -15,7 +15,7 @@ public:
         sampleData = dsp::malloc<utils::sampleData>(1);
         stream = pipeline::createStream<utils::complex>();
         stream->auxData = sampleData;
-        buf = dsp::malloc<uint8_t>(1024 * 128);
+        buf = dsp::malloc<uint8_t>(pipeline::BUFFER_COUNT);
         converter = dsp::getConverter(8, false);
 
         addInput("Frequency in", utils::frequencyType(), freq, [&](int) {
@@ -23,7 +23,7 @@ public:
                 setFrequency(*freq);
             }
         });
-        addOutput("IQ out", utils::complexStreamType(), stream, true);
+        cb = addOutput("IQ out", utils::complexStreamType(), stream, true);
     }
 
     ~RTLSDRBlock() {
@@ -45,8 +45,7 @@ public:
         if (device) {
             stream->write([&](utils::complex* dat) {
                 int read = 0;
-                if (rtlsdr_read_sync(device, buf, 1024 * 16, &read) == 0) {
-                    std::cout << "PULL" << std::endl;
+                if (rtlsdr_read_sync(device, buf, pipeline::BUFFER_COUNT, &read) == 0) {
                     read /= 2;
                     converter(buf, dat, read);
                     return read;
@@ -75,6 +74,7 @@ public:
             rtlsdr_set_and_get_tuner_bandwidth(device, sampleData->sampleRate, &sampleData->bandwidth, 0);
             std::cout << "BW " << sampleData->bandwidth << std::endl;
             rtlsdr_reset_buffer(device);
+            cb(1);
         }
         stream->start();
         pipeline::threaded_block::start();
@@ -99,6 +99,7 @@ public:
 
 private:
 
+    pipeline::connection_callback cb;
     pipeline::datastream<utils::complex>* stream;
     utils::sampleData* sampleData;
     dsp::IQConverter converter;

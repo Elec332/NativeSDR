@@ -35,7 +35,7 @@ public:
                     return;
                 }
                 if (stream) {
-                    stream->read([&](uint8_t* dat, int len) {
+                    stream->read([&](const uint8_t* dat, int len) {
                         memcpy(data, dat, len);
                     });
                 } else {
@@ -183,6 +183,7 @@ class Test : public ModuleInstance {
         nodeManager->registerBlockType("Test Block In", createStreamInBlock);
         nodeManager->registerBlockType("File Stream Block Out", createStreamFileBlock);
         nodeManager->registerBlockType("FFT Block", createFFTBlock);
+        nodeManager->registerBlockType("VFO Block", createOffsetBlock);
     }
 
 };

@@ -32,7 +32,7 @@ endfunction()
 
 macro(getSources)
     file(GLOB_RECURSE SRC src/cpp/*.cpp src/cpp/*.c src/cpp/*.hpp src/cpp/*.h)
-    file(GLOB_RECURSE SRC_C src/cpp/*.c src/c/*.h)
+    file(GLOB_RECURSE SRC_C src/c/*.c src/c/*.h)
     set_source_files_properties(${SRC} PROPERTIES LANGUAGE CXX)
     set_source_files_properties(${SRC_C} PROPERTIES LANGUAGE C)
 endmacro()

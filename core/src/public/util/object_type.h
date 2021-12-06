@@ -46,6 +46,8 @@ namespace utils {
 
     NATIVESDR_CORE_EXPORT const utils::object_type<uint64_t>* frequencyType();
 
+    NATIVESDR_CORE_EXPORT const utils::object_type<int>* numberType();
+
 }
 
 #endif //NATIVESDR_OBJECT_TYPE_H

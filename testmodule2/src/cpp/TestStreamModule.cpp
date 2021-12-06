@@ -14,7 +14,6 @@
 class FFTTestBlock : public pipeline::threaded_block {
 
     int factor = 16;
-    float PI = 3.14159265358979323846;
 
 public:
 
@@ -53,12 +52,11 @@ public:
         addOutput("Renderer", utils::uiType(), drawFuncRef, true);
         addInput("Frequency in", utils::frequencyType(), freq);
 
-        int samples = 1024 * 128;
-        iq = dsp::malloc<utils::complex>(samples);
-        fft = dsp::malloc<utils::complex>(samples);
-        psd = dsp::malloc<float>(samples);
-        drawBuf = dsp::malloc<float>(samples);
-        window = dsp::malloc<float>(samples);
+        iq = dsp::malloc<utils::complex>(pipeline::BUFFER_COUNT);
+        fft = dsp::malloc<utils::complex>(pipeline::BUFFER_COUNT);
+        psd = dsp::malloc<float>(pipeline::BUFFER_COUNT);
+        drawBuf = dsp::malloc<float>(pipeline::BUFFER_COUNT);
+        window = dsp::malloc<float>(pipeline::BUFFER_COUNT);
     }
 
     ~FFTTestBlock() {
@@ -71,14 +69,9 @@ public:
 
     void loop() override {
         if (stream) {
-            stream->read([&](utils::complex* dat, int samples) {
-                dsp::WindowFunction windowFunc = dsp::squareWindow;
+            stream->read([&](const utils::complex* dat, int samples) {
                 if (lastSamples != samples) {
-                    for (int i = 0; i < samples; i++) {
-                        window[i] = windowFunc(i, samples);
-                    }
-                    plan = dsp::create_plan(samples, iq, fft, true);
-                    lastSamples = samples;
+                    resetRoot(samples);
                 }
                 volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq, (lv_32fc_t*) dat, window, samples);
                 plan->execute();
@@ -91,7 +84,7 @@ public:
                             max = psd[offset + j];
                         }
                     }
-                    drawBuf[i] = max;
+                    drawBuf[i] = (drawBuf[i] * (1 - attack)) + (max * attack);
                     offset += factor;
                 }
                 drawSamples = samples / factor;
@@ -102,6 +95,41 @@ public:
     }
 
     void drawMiddle() override {
+    }
+
+    bool hasMenu() override {
+        return true;
+    }
+
+    void drawMenu() override {
+        ImGui::SliderFloat("FFT Attack", &attack, 0, 1);
+        if (ImGui::Combo("##filter", &filter, "Square\0Hamming\0Hann")) {
+            resetRoot(lastSamples);
+        }
+    }
+
+    void resetRoot(int newSamples) {
+        dsp::WindowFunction windowFunc = getWindow();
+        for (int i = 0; i < newSamples; i++) {
+            window[i] = i % 2 ? windowFunc(i, newSamples) : -windowFunc(i, newSamples);
+        }
+        if (lastSamples != newSamples) {
+            plan = dsp::create_plan(newSamples, iq, fft, true);
+            lastSamples = newSamples;
+        }
+    }
+
+    [[nodiscard]] dsp::WindowFunction getWindow() const {
+        switch (filter) {
+            case 0:
+               return dsp::squareWindow;
+            case 1:
+                return dsp::hammingWindow;
+            case 2:
+                return dsp::hannWindow;
+            default:
+                return dsp::squareWindow;
+        }
     }
 
 private:
@@ -120,6 +148,9 @@ private:
     int lastSamples = 0;
     int drawSamples = 0;
 
+    float attack = 0.2;
+    int filter = 0;
+
 };
 
 class FileStreamTestBlock : public pipeline::threaded_block {
@@ -135,7 +166,7 @@ public:
         stream->auxData = sampleData;
         fopen_s(&file, fileName.c_str(), "rb");
         data = readWAV(file);
-        buf = dsp::malloc<int16_t>(1024 * 128);
+        buf = dsp::malloc<int16_t>(pipeline::BUFFER_COUNT);
         converter = dsp::getConverter(data->sampleData.bitsPerSample, data->sampleData.bitsPerSample != 8, data->sampleData.blockAlign);
 
         std::cout << "Center freq: " << data->centerFreq << std::endl;
@@ -147,7 +178,6 @@ public:
         std::cout << "bpSample: " << data->sampleData.bitsPerSample << std::endl;
         std::cout << "allign: " << data->sampleData.blockAlign << std::endl;
         std::cout << "byperSample: " << data->sampleData.bytesPerSec << std::endl;
-        sampleData->offset = 0;
         sampleData->bandwidth = data->sampleData.SamplesPerSec;
         sampleData->sampleRate = data->sampleData.SamplesPerSec;
         sampleData->centerFreq = data->centerFreq;

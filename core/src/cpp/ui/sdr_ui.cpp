@@ -62,10 +62,15 @@ void sdr_ui::draw(pipeline::schematic* nodes) {
         float splitterWidth = 4.0f;
         ImGui::Splitter(true, splitterWidth, &leftPaneWidth, &rightPaneWidth, 0, 50);
         ImGui::BeginChild("SubMenu", ImVec2(leftPaneWidth, totalSize.y));
+        int i = 1;
         nodes->forEachBlock([&](const pipeline::block_data& w) {
             pipeline::block* block = w->getBlock();
-            if (block->hasMenu() && ImGui::CollapsingHeader(w->getType().c_str())) {
-                block->drawMenu();
+            if (block->hasMenu()) {
+                ImGui::PushID(i++);
+                if (ImGui::CollapsingHeader(w->getType().c_str())) {
+                    block->drawMenu();
+                }
+                ImGui::PopID();
             }
         });
         if (ImGui::CollapsingHeader("Debug")) {

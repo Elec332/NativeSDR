@@ -48,6 +48,10 @@ void drawFrequencyType(bool connected) {
     ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::RoundSquare, connected, ImColor(255, 255, 0), ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
 }
 
+void drawNumberType(bool connected) {
+    ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::Square, connected, ImColor(128, 128, 128), ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
+}
+
 void init_object_types() {
 }
 
@@ -57,6 +61,7 @@ simple_type<utils::sampleData> sample_data("SDR Data", drawComplexStream);
 simple_type<std::string> string_data("String", drawStringType);
 simple_type<utils::drawFunc> ui("UI", drawUIType);
 simple_type<uint64_t> freq("Frequency", drawFrequencyType);
+simple_type<int> number("Number", drawNumberType);
 
 const utils::object_type<pipeline::datastream<utils::complex>>* utils::complexStreamType() {
     return &complex_stream;
@@ -81,3 +86,8 @@ const utils::object_type<utils::drawFunc>* utils::uiType() {
 const utils::object_type<uint64_t>* utils::frequencyType() {
     return &freq;
 }
+
+const utils::object_type<int>* utils::numberType() {
+    return &number;
+}
+

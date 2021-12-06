@@ -144,6 +144,52 @@ private:
 
 };
 
+class NumberBlock : public pipeline::block {
+
+public:
+
+    NumberBlock() : pipeline::block("Number", ImColor(0, 0, 255)) {
+        val = 100000;
+        cb = addOutput("Out", utils::numberType(), valRef, true);
+    }
+
+    void start() override {
+    }
+
+    void stop() override {
+    }
+
+    void drawMiddle() override {
+        ImGui::TextUnformatted("Value: ");
+        ImGui::PushItemWidth(100);
+        if (ImGui::InputText("##Value", &value)) {
+            int nv = std::stoi(value);
+            if (nv != val) {
+                val = nv;
+                cb(0);
+            }
+        }
+        ImGui::PopItemWidth();
+        value = std::to_string(val);
+    }
+
+    void readJson(const nlohmann::json& json) override {
+        val = json["value"].get<int>();
+    }
+
+    void toJson(nlohmann::json& json) const override {
+        json["value"] = val;
+    }
+
+private:
+
+    pipeline::connection_callback cb;
+    std::string value;
+    int val = 0;
+    int* valRef = &val;
+
+};
+
 pipeline::block_ptr createHSBlock() {
     return std::make_shared<HSBlock>();
 }
@@ -152,7 +198,12 @@ pipeline::block_ptr createVSBlock() {
     return std::make_shared<VSBlock>();
 }
 
+pipeline::block_ptr createNumberBlock() {
+    return std::make_shared<NumberBlock>();
+}
+
 void register_ui_components(pipeline::node_manager* nodeManager) {
     nodeManager->registerBlockType("Horizontal Splitter", createHSBlock);
     nodeManager->registerBlockType("Vertical Splitter", createVSBlock);
+    nodeManager->registerBlockType("Number", createNumberBlock);
 }

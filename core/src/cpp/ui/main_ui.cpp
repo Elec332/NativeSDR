@@ -9,7 +9,8 @@
 
 bool showEditor = false;
 uint64_t oldFrequency = 0;
-uint64_t frequency = 99109674;
+//uint64_t frequency = 99109674;
+uint64_t frequency = 95300000;
 uint64_t* freqRef = &frequency;
 uint8_t drawer[FREQUENCY_NUMBERS];
 ImFont* big;

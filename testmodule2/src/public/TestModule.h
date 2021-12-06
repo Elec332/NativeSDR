@@ -17,4 +17,6 @@ pipeline::block_ptr createStreamFileBlock();
 
 pipeline::block_ptr createFFTBlock();
 
+pipeline::block_ptr createOffsetBlock();
+
 #endif //NATIVESDR_TESTMODULE_H
