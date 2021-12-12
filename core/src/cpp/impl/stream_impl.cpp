@@ -27,27 +27,33 @@ public:
             return false;
         }
         int len = writer(writeBuf);
-        std::unique_lock<std::mutex> raii(writeMutex);
-        { //Keep cycling to avoid SDR overflows
-            std::unique_lock<std::mutex> raii2(readCountMutex);
-            if (!readDone && readers == 0) {
-                return true;
-            }
+        if (len > pipeline::BUFFER_COUNT) {
+            std::cout << ("Stream write too large! ") << readers << std::endl;
+            throw std::exception("Stream write too large!");
         }
-        writeWait.wait(raii, [&] {
-            return readDone || stopped;
-        });
-        if (stopped) {
-            return false;
-        }
-
-        T* temp = readBuf;
-        readBuf = writeBuf;
-        writeSize = len;
-        writeBuf = temp;
-        readDone = false;
         {
-            std::unique_lock<std::mutex> raii2(readMutex);
+            std::unique_lock<std::mutex> raii(writeMutex);
+            { //Keep cycling to avoid SDR overflows
+                std::lock_guard<std::mutex> raii2(readCountMutex);
+                if (!readDone && readers == 0) {
+                    return true;
+                }
+            }
+            writeWait.wait(raii, [&] {
+                return readDone || stopped;
+            });
+            if (stopped) {
+                return false;
+            }
+
+            T* temp = readBuf;
+            readBuf = writeBuf;
+            writeSize = len;
+            writeBuf = temp;
+            readDone = false;
+        }
+        {
+            std::lock_guard<std::mutex> raii2(readMutex);
             writeDone = true;
         }
         readWait.notify_all();
@@ -58,9 +64,14 @@ public:
         if (stopped) {
             return false;
         }
+        auto rVal = (size_t) &reader;
         {
             std::unique_lock<std::mutex> raii(readMutex);
             readWait.wait(raii, [&] {
+                std::lock_guard<std::mutex> raii3(readCountMutex);
+                if (readFinished.count(rVal)) {
+                    return false;
+                }
                 return writeDone || stopped;
             });
             if (stopped) {
@@ -70,27 +81,29 @@ public:
 
         reader(readBuf, writeSize);
         {
-            std::unique_lock<std::mutex> raii3(readCountMutex);
-            readFinished.insert((size_t) &reader);
+            std::lock_guard<std::mutex> raii3(readCountMutex);
+            readFinished.insert(rVal);
             if (readFinished.size() != readers) {
                 return true;
             }
         }
-        std::unique_lock<std::mutex> raii(readMutex);
         {
-            std::unique_lock<std::mutex> raii2(writeMutex);
+            std::lock_guard<std::mutex> raii(readMutex);
+            std::lock_guard<std::mutex> raii3(readCountMutex);
+            readFinished.clear();
+            writeDone = false;
+        }
+        {
+            std::lock_guard<std::mutex> raii2(writeMutex);
             readDone = true;
         }
-        readFinished.clear();
-        writeDone = false;
         writeWait.notify_all();
         return true;
     }
 
     void setReaders(int readerCount) override {
-        std::unique_lock<std::mutex> raii(readCountMutex);
+        std::lock_guard<std::mutex> raii(readCountMutex);
         readers = readerCount;
-        std::cout << "outputs stream: " << readers << std::endl;
     }
 
     void start() override {
