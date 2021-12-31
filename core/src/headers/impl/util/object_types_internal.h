@@ -34,7 +34,7 @@ class simple_type : public abstract_type<T> {
 
 public:
 
-    simple_type(std::string name, void(* drawer)(bool)) noexcept: abstract_type(std::move(name)), drawer(drawer) {
+    simple_type(std::string name, void(* drawer)(bool)) noexcept: abstract_type<T>(std::move(name)), drawer(drawer) {
     }
 
     void drawIcon(bool connected) const override {

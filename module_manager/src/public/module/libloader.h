@@ -7,12 +7,13 @@
 
 #include <string>
 #include <functional>
+#include <list>
 
 namespace libloader {
 
-    class loading_exception : public std::exception {
+    class loading_exception : public std::runtime_error {
     public:
-        explicit loading_exception(const char *msg) : std::exception(msg) {}
+        explicit loading_exception(const char *msg) : std::runtime_error(msg) {}
     };
 
     class library {
@@ -74,7 +75,7 @@ namespace libloader {
 
     std::list<libloader::library> loadFolder(const std::string &path);
 
-#ifdef _FILESYSTEM_
+#if defined(_FILESYSTEM_) || defined(_GLIBCXX_FILESYSTEM)
 
     std::list<libloader::library> loadFolder(const std::filesystem::path &path);
 

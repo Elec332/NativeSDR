@@ -1,6 +1,78 @@
-include(CMakeParseArguments)
+if (NOT PBCTF)
+    include(CMakeParseArguments)
+    if(NOT MSVC)
+        find_package(PkgConfig REQUIRED)
+    endif()
+    if(NOT CMAKE_BASE_INCLUDE)
+        set(CMAKE_BASE_INCLUDE ${CMAKE_CURRENT_LIST_FILE})
+    endif()
+else() ## Windows-only
+    separate_arguments(BINDIRS)
+    separate_arguments(BINDIRS_DEPS)
+    foreach(BDF ${BINDIRS_DEPS})
+        list(APPEND BINDIRS "${BDF}")
+    endforeach()
+
+    file(GET_RUNTIME_DEPENDENCIES
+            EXECUTABLES ${PBCTF}
+            CONFLICTING_DEPENDENCIES_PREFIX CONFLICTED_DEPS
+            RESOLVED_DEPENDENCIES_VAR RESOLVED_DEPS
+            UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED_DEPS
+            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+            DIRECTORIES ${BINDIRS}
+    )
+
+    if(NOT CONFLICTED_DEPS_FILENAMES STREQUAL "")
+        foreach(conflict ${CONFLICTED_DEPS_FILENAMES})
+            list(POP_BACK CONFLICTED_DEPS_${conflict} BDF)
+            list(APPEND RESOLVED_DEPS "${BDF}")
+        endforeach()
+    endif()
+
+    foreach(file ${RESOLVED_DEPS})
+        file(INSTALL DESTINATION "${CIP}" TYPE SHARED_LIBRARY FOLLOW_SYMLINK_CHAIN FILES "${file}")
+    endforeach()
+    list(LENGTH UNRESOLVED_DEPS len)
+    if("${len}" GREATER 0)
+        message(${UNRESOLVED_DEPS})
+        message(FATAL_ERROR "Unresolved dependencies detected!")
+    endif()
+endif()
 
 function(addProject type)
+    function(postEvalFuncAP)
+        set(BINDIRS "")
+        set(LINKS_REC "")
+        macro(addBinDirs links)
+            if (NOT "${links}" STREQUAL links2-NOTFOUND)
+                foreach(PROJ_LINK ${links})
+                    list(APPEND LINKS_REC "|.*${PROJ_LINK}.*")
+                    string(TOLOWER ${PROJ_LINK} PROJ_LINKL)
+                    list(APPEND LINKS_REC "|.*${PROJ_LINKL}.*")
+                    if(TARGET ${PROJ_LINK})
+                        get_target_property(target_type ${PROJ_LINK} TYPE)
+                        if(${target_type} STREQUAL SHARED_LIBRARY)
+                            get_target_property(BIN_D ${PROJ_LINK} BINARY_DIR)
+                            list(APPEND BINDIRS "${BIN_D}")
+                        endif()
+                        get_target_property(links2 ${PROJ_LINK} LINK_LIBRARIES)
+                        addBinDirs("${links2}")
+                    endif()
+                endforeach()
+            endif ()
+        endmacro()
+        get_target_property(PROJ_LINKS ${PROJECT_NAME} LINK_LIBRARIES)
+        if(NOT "${PROJ_LINKS}" STREQUAL PROJ_LINKS-NOTFOUND)
+            addBinDirs("${PROJ_LINKS}")
+            set(LINKS_REC "${LINKS_REC}")
+            string(SUBSTRING "${LINKS_REC}" 1 -1 LINKS_REC)
+            string(REPLACE ";" "" LINKS_REC ${LINKS_REC})
+        endif()
+        set_target_properties(${PROJECT_NAME} PROPERTIES LINKS_REC "${LINKS_REC}")
+        set_target_properties(${PROJECT_NAME} PROPERTIES DEP_BIN_DIRS "${BINDIRS}")
+    endfunction()
+    cmake_language(DEFER CALL postEvalFuncAP)
     getSources()
 
     #Lib type mapper
@@ -10,6 +82,14 @@ function(addProject type)
         else()
             message(FATAL_ERROR "No/invalid lib type defined")
         endif()
+    endif()
+
+    if(WIN32)
+        set(BINDIRS "")
+        foreach(bin_dir ${CMAKE_C_IMPLICIT_LINK_DIRECTORIES})
+            list(APPEND BINDIRS "${bin_dir}/../bin")
+        endforeach()
+        set(BINDIRS ${BINDIRS} PARENT_SCOPE)
     endif()
 
     #Lib or executable
@@ -73,9 +153,31 @@ endmacro()
 
 function(installRuntime)
     if (DEFINED ARGV0)
-        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${ARGV0})
+        set(DEST ${ARGV0})
     else()
-        install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION /)
+        set(DEST /)
+    endif()
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${DEST})
+    if(WIN32 AND NOT MSVC)
+        install(CODE "
+            file(GET_RUNTIME_DEPENDENCIES
+                EXECUTABLES $<TARGET_FILE:${PROJECT_NAME}>
+                RESOLVED_DEPENDENCIES_VAR RESOLVED_DEPS
+                UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED_DEPS
+                POST_EXCLUDE_REGEXES \".*system32/.*\\\\.dll\"
+                PRE_EXCLUDE_REGEXES \"$<TARGET_PROPERTY:${PROJECT_NAME},LINKS_REC>\"
+            )
+        ")
+        install(CODE [[
+            foreach(file ${RESOLVED_DEPS})
+                file(INSTALL
+                    DESTINATION "${CMAKE_INSTALL_PREFIX}/${DEST}"
+                    TYPE SHARED_LIBRARY
+                    FOLLOW_SYMLINK_CHAIN
+                    FILES "${file}"
+                )
+            endforeach()
+        ]])
     endif()
 endfunction()
 
@@ -86,11 +188,13 @@ macro(setCentralOutput)
     SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endmacro()
 
-macro(importSharedLibraries)
-    if(NOT (${CMAKE_VERSION} VERSION_LESS "3.20"))
+function(importSharedLibraries)
+    if(NOT (${CMAKE_VERSION} VERSION_LESS "3.20") AND MSVC)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> $<TARGET_FILE_DIR:${PROJECT_NAME}> COMMAND_EXPAND_LISTS)
+    elseif(WIN32)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -DCIP="$<TARGET_FILE_DIR:${PROJECT_NAME}>" -DBINDIRS="${BINDIRS}" -DBINDIRS_DEPS="$<TARGET_PROPERTY:${PROJECT_NAME},DEP_BIN_DIRS>" -DPBCTF="$<TARGET_FILE:${PROJECT_NAME}>" -P ${CMAKE_BASE_INCLUDE} COMMAND_EXPAND_LISTS)
     endif()
-endmacro()
+endfunction()
 
 macro(forceX64)
     if(IGNORE_TARGET_PLATFORM)
@@ -168,14 +272,15 @@ function(createStaticLibrary name)
             endif()
         endif()
     else()
-        #todo: Linux ect
+        message(FATAL_ERROR "TODO: StaticLibNonMSVC")
     endif()
 endfunction()
 
 function(createSharedLibrary name)
+    cmake_parse_arguments(CSL "USE;PUBLIC;GLOBAL" "DLL;LIB;DLLD;LIBD;FILE;FILED;INSTALL" "DEPENDENCIES" ${ARGN})
+
     if(MSVC)
         set(csl_root ${PROJECT_SOURCE_DIR}/libs/${name})
-        cmake_parse_arguments(CSL "USE;PUBLIC;GLOBAL" "DLL;LIB;DLLD;LIBD;FILE;FILED;INSTALL" "DEPENDENCIES" ${ARGN})
         if(CSL_GLOBAL)
             add_library(${name} SHARED IMPORTED GLOBAL)
         else()
@@ -216,7 +321,7 @@ function(createSharedLibrary name)
         if(EXISTS "${csl_root}/lib/${CSL_LIB_FILE}")
             set_target_properties(${name} PROPERTIES IMPORTED_IMPLIB "${csl_root}/lib/${CSL_LIB_FILE}")
         else()
-            find_library(UIDL uuid)
+            find_library(UIDL uuid HINTS ${CMAKE_C_IMPLICIT_LINK_DIRECTORIES})
             set_target_properties(${name} PROPERTIES IMPORTED_IMPLIB ${UIDL}) # Jokes on you
 #            set_target_properties(${name} PROPERTIES IMPORTED_IMPLIB NOTFOUND)
         endif()
@@ -240,7 +345,23 @@ function(createSharedLibrary name)
             endif()
         endif()
     else()
-        #todo: Linux ect
+        if(CSL_GLOBAL)
+            pkg_search_module(${name} REQUIRED IMPORTED_TARGET ${name})
+        else()
+            pkg_search_module(${name} REQUIRED IMPORTED_TARGET GLOBAL ${name})
+        endif()
+        add_library(${name} ALIAS PkgConfig::${name})
+        if(CSL_USE)
+            if(CSL_PUBLIC)
+                useLibrary(${name} PUBLIC)
+            else()
+                useLibrary(${name})
+            endif()
+        endif()
+        if(CSL_INSTALL AND WIN32)
+            find_file(TESTVALPR_${name} NAMES "${CSL_DLL}.dll" "${CSL_FILE}.dll" "${name}.dll" "lib${CSL_DLL}.dll" "lib${CSL_FILE}.dll" "lib${name}.dll" PATHS ${BINDIRS} REQUIRED)
+            install(FILES "${TESTVALPR_${name}}" DESTINATION ${CSL_INSTALL})
+        endif()
     endif()
 endfunction()
 

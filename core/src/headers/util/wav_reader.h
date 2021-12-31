@@ -42,8 +42,8 @@ std::shared_ptr<file_data> readWAV(FILE* file) {
     if (file == nullptr) {
         return nullptr;
     }
-    uint32_t buf_len = 64;
-    auto buf = (uint8_t*) malloc(buf_len);
+    const uint32_t buf_len = 64;
+    uint8_t buf[buf_len];
     if (!checkFourBytes(file, buf, RIFF)) {
         return nullptr;
     }

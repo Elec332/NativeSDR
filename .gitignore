@@ -28,5 +28,4 @@ classes/
 
 setup.bat
 
-/cmake-build-release
-/cmake-build-debug
+/cmake-build-*

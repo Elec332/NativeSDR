@@ -6,15 +6,16 @@
 #define NATIVESDR_MALLOC_H
 
 #include <nativesdr_core_export.h>
+#include <cstddef>
 
 namespace dsp {
+
+    NATIVESDR_CORE_EXPORT void* malloc(size_t length);
 
     template<class T>
     T* malloc(size_t length) {
         return (T*) malloc(length * sizeof(T));
     }
-
-    NATIVESDR_CORE_EXPORT void* malloc(size_t length);
 
     NATIVESDR_CORE_EXPORT void free(void* ptr);
 

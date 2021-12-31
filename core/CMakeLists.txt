@@ -8,11 +8,9 @@ installRuntime()
 useLibrary(ModuleManager PUBLIC)
 useLibrary(NativeSDR_graphics)
 
-createSharedLibrary(fftw USE FILE libfftw3f-3 INSTALL /)
+createSharedLibrary(fftw3f USE FILE libfftw3f-3 INSTALL /)
 createSharedLibrary(volk USE PUBLIC INSTALL /)
+createSharedLibrary(libusb-1.0 PUBLIC INSTALL / GLOBAL)
 useHeaderLibrary(json)
-createSharedLibrary(libusb FILE libusb-1.0 PUBLIC INSTALL / GLOBAL)
 
-#########################
-
-addTest(NativeSDR_graphics)
+addTest()

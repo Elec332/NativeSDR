@@ -8,6 +8,7 @@
 #include <pipeline/block/block.h>
 
 #include <utility>
+#include <thread>
 
 namespace pipeline {
 

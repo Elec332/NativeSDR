@@ -4,17 +4,14 @@
 
 #define IM_INTERNAL
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include "NativeSDRGraphics.h"
 
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include <cstdio>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <vector>
-
-//Todo: Linux
-#pragma comment(lib, "opengl32.lib")
 
 static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
