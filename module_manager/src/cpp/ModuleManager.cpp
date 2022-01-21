@@ -9,11 +9,11 @@ class ModuleContainerImpl : public ModuleContainer {
 
 public:
 
-    explicit ModuleContainerImpl(libloader::library &lib) : library(std::move(lib)) {
+    explicit ModuleContainerImpl(libloader::library& lib) : library(std::move(lib)) {
         init_h = (void (*)()) library.getSymbol("initModule");
         shutdown_h = (void (*)()) library.getSymbol("onShutdownModule");
-        create_h = (ModuleInstance *(*)()) library.getSymbol("createModuleContainer");
-        destroy_h = (void (*)(ModuleInstance *)) library.getSymbol("destroyModuleContainer");
+        create_h = (ModuleInstance* (*)()) library.getSymbol("createModuleContainer");
+        destroy_h = (void (*)(ModuleInstance*)) library.getSymbol("destroyModuleContainer");
     }
 
     void initModule() override {
@@ -24,11 +24,11 @@ public:
         shutdown_h();
     }
 
-    ModuleInstance *createModuleContainer() override {
+    ModuleInstance* createModuleContainer() override {
         return create_h();
     }
 
-    void destroyModuleContainer(ModuleInstance *instance) override {
+    void destroyModuleContainer(ModuleInstance* instance) override {
         destroy_h(instance);
     }
 
@@ -41,17 +41,17 @@ public:
 
 private:
 
-    void (*init_h)();
+    void (* init_h)();
 
-    void (*shutdown_h)();
+    void (* shutdown_h)();
 
-    ModuleInstance *(*create_h)();
+    ModuleInstance* (* create_h)();
 
-    void (*destroy_h)(ModuleInstance *);
+    void (* destroy_h)(ModuleInstance*);
 
 };
 
-ModulePointer getModule(const std::string &location) {
+ModulePointer getModule(const std::string& location) {
     if (!std::filesystem::exists(location) || !std::filesystem::is_regular_file(location)) {
         return nullptr;
     }
@@ -59,7 +59,7 @@ ModulePointer getModule(const std::string &location) {
     return getModule(ref);
 }
 
-ModulePointer getModule(libloader::library &lib) {
+ModulePointer getModule(libloader::library& lib) {
     if (!lib.isLoaded()) {
         return nullptr;
     }
@@ -72,9 +72,9 @@ ModulePointer getModule(libloader::library &lib) {
     return ret;
 }
 
-std::list<ModulePointer> getModules(std::list<libloader::library> &libs) {
+std::list<ModulePointer> getModules(std::list<libloader::library>& libs) {
     std::list<ModulePointer> modules;
-    libs.remove_if([&](libloader::library &lib) {
+    libs.remove_if([&](libloader::library& lib) {
         ModulePointer p = getModule(lib);
         if (p) {
             modules.push_front(p);

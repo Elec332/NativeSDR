@@ -19,4 +19,8 @@ pipeline::block_ptr createFFTBlock();
 
 pipeline::block_ptr createOffsetBlock();
 
+pipeline::block_ptr createResampleBlock();
+
+pipeline::block_ptr createAMBlock();
+
 #endif //NATIVESDR_TESTMODULE_H

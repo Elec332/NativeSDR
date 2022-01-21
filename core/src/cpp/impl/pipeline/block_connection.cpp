@@ -14,7 +14,7 @@ public:
     block_connection_impl(std::string name, const utils::object_type_base* type, void*& object, pipeline::connection_callback callback, bool multi, uint8_t id, const std::type_info& typeInfo) :
             name(std::move(name)), obj(&object), type(type), multi(multi), id(id), callback(std::move(callback)), ti(typeInfo) {
         if (id < 1 || id > MAX_BLOCK_PINS) {
-            throw std::exception("Max pins exceeded");
+            throw std::runtime_error("Max pins exceeded");
         }
     }
 

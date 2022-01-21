@@ -184,6 +184,8 @@ class Test : public ModuleInstance {
         nodeManager->registerBlockType("File Stream Block Out", createStreamFileBlock);
         nodeManager->registerBlockType("FFT Block", createFFTBlock);
         nodeManager->registerBlockType("VFO Block", createOffsetBlock);
+        nodeManager->registerBlockType("Resample Block", createResampleBlock);
+        nodeManager->registerBlockType("AM Block", createAMBlock);
     }
 
 };

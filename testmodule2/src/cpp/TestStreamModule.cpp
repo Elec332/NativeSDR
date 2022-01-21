@@ -13,8 +13,6 @@
 
 class FFTTestBlock : public pipeline::threaded_block {
 
-    int factor = 16;
-
 public:
 
     FFTTestBlock() : pipeline::threaded_block("FFT Block", ImColor(255, 0, 0)) {
@@ -34,7 +32,7 @@ public:
             if (sr > bandwidth) {
                 auto diff = sr - bandwidth;
                 auto iPerD = sr / drawSamples;
-                skip = (int) std::ceil((diff / bandwidth) * drawSamples);
+                skip = (int) std::ceil((diff / sr) * drawSamples);
                 if (skip % 2 != 0) {
                     skip++;
                 }
@@ -43,9 +41,9 @@ public:
             auto hBw = std::abs(bandwidth / 2);
             ImVec2 start = ImGui::GetWindowPos();
             ImVec2 end = start + ImGui::GetWindowSize();
-            ImVec2 ppu = ImGui::DrawChartFrame(start, end, -100, 0, utils::ui::getDbScale, f - hBw, f + hBw, utils::ui::getFreqScale);
-
-            ImGui::DrawChartLineFilled(start, end, drawBuf + (skip / 2), drawSamples - skip, ppu, -100, utils::ui::BLUE, utils::ui::BLUE_F, true);
+            double yStart = -100;
+            ImVec2 ppu = ImGui::DrawChartFrame(start, end, yStart, 0, utils::ui::getDbScale, f - hBw, f + hBw, utils::ui::getFreqScale);
+            ImGui::DrawChartLineFilled(start, end, &drawBuf[skip / 2], drawSamples - skip, ppu, yStart, utils::ui::BLUE, utils::ui::BLUE_F);
         };
         drawFuncRef = &drawFunc;
         addInput("IQ in", utils::complexStreamType(), stream);
@@ -73,6 +71,7 @@ public:
                 if (lastSamples != samples) {
                     resetRoot(samples);
                 }
+                int factor = 2;
                 volk_32fc_32f_multiply_32fc((lv_32fc_t*) iq, (lv_32fc_t*) dat, window, samples);
                 plan->execute();
                 volk_32fc_s32f_power_spectrum_32f(psd, (lv_32fc_t*) fft, (float) samples, samples);
@@ -103,7 +102,7 @@ public:
 
     void drawMenu() override {
         ImGui::SliderFloat("FFT Attack", &attack, 0, 1);
-        if (ImGui::Combo("##filter", &filter, "Square\0Hamming\0Hann")) {
+        if (ImGui::Combo("##filter", &filter, "Square\0Hamming\0Hann\0")) {
             resetRoot(lastSamples);
         }
     }
@@ -122,7 +121,7 @@ public:
     [[nodiscard]] dsp::WindowFunction getWindow() const {
         switch (filter) {
             case 0:
-               return dsp::squareWindow;
+                return dsp::squareWindow;
             case 1:
                 return dsp::hammingWindow;
             case 2:
@@ -156,7 +155,7 @@ private:
 class FileStreamTestBlock : public pipeline::threaded_block {
 
     //std::string fileName = "D:/Downloads/15-29-07_92783258Hz.wav";
-    std::string fileName = "D:/Downloads/15-39-37_91303258Hz.wav";
+    std::string fileName = "D:/Downloads/ecars_net_7255_HDSDR_20180225_174354Z_7255kHz_RF.wav";
 
 public:
 
@@ -166,7 +165,8 @@ public:
         stream->auxData = sampleData;
         fopen_s(&file, fileName.c_str(), "rb");
         data = readWAV(file);
-        buf = dsp::malloc<int16_t>(pipeline::BUFFER_COUNT);
+        startPos = ftell(file);
+        buf = dsp::malloc<int16_t>(pipeline::BUFFER_COUNT * 2);
         converter = dsp::getConverter(data->sampleData.bitsPerSample, data->sampleData.bitsPerSample != 8, data->sampleData.blockAlign);
 
         std::cout << "Center freq: " << data->centerFreq << std::endl;
@@ -194,15 +194,19 @@ public:
     }
 
     void loop() override {
-        int samples = 1024 * 8;
+        int samples = 1024 * 16;
+        int elementSize = sizeof(int16_t) * 2;
         stream->write([&](utils::complex* dat) {
-            fread(buf, 1, samples * 2 * sizeof(int16_t), file);
+            auto len = fread(buf, elementSize, samples, file);
+            if (len < samples) {
+                fseek(file, startPos, SEEK_SET);
+                fread(&buf[len], elementSize, samples - len, file);
+            }
             converter(buf, dat, samples);
             return samples;
         });
-        int base = 1000 * 1000;
-
-        std::this_thread::sleep_for(std::chrono::microseconds((base * samples) / data->sampleData.SamplesPerSec));
+//        double base = 1000 * 1000 * 1000;
+//        std::this_thread::sleep_for(std::chrono::nanoseconds((int) ((base * samples) / data->sampleData.SamplesPerSec)));
     }
 
     void start() override {
@@ -225,10 +229,60 @@ private:
     pipeline::datastream<utils::complex>* stream;
     utils::sampleData* sampleData;
     FILE* file = nullptr; //Shut up clang...
+    long startPos = 0;
     std::shared_ptr<file_data> data;
     dsp::IQConverter converter;
 
     int16_t* buf;
+
+};
+
+class AMBlock : public pipeline::threaded_block {
+
+public:
+
+    AMBlock() : pipeline::threaded_block("AM Block", ImColor(255, 0, 0)) {
+        streamOut = pipeline::createStream<utils::audio>();
+        middleBuf = dsp::malloc<float>(pipeline::BUFFER_COUNT);
+        addOutput("Audio out", utils::audioStreamType(), streamOut, true);
+        addInput("IQ in", utils::complexStreamType(), streamIn);
+    }
+
+    ~AMBlock() {
+        pipeline::deleteStream(streamOut);
+        dsp::free(middleBuf);
+    }
+
+    void loop() override {
+        if (streamIn) {
+            streamIn->read([&](const utils::complex* data, int len) {
+                volk_32fc_magnitude_32f(middleBuf, (lv_32fc_t*) data, len);
+                streamOut->write([&](utils::audio* stream) {
+                    volk_32f_x2_interleave_32fc((lv_32fc_t*) stream, middleBuf, middleBuf, len);
+                    return len;
+                });
+            });
+        }
+    }
+
+    void start() override {
+        streamOut->start();
+        pipeline::threaded_block::start();
+    }
+
+    void stop() override {
+        streamOut->stop();
+        pipeline::threaded_block::stop();
+    }
+
+    void drawMiddle() override {
+    }
+
+private:
+
+    float* middleBuf;
+    pipeline::datastream<utils::complex>* streamIn = nullptr;
+    pipeline::datastream<utils::audio>* streamOut;
 
 };
 
@@ -238,4 +292,8 @@ pipeline::block_ptr createStreamFileBlock() {
 
 pipeline::block_ptr createFFTBlock() {
     return std::make_shared<FFTTestBlock>();
+}
+
+pipeline::block_ptr createAMBlock() {
+    return std::make_shared<AMBlock>();
 }

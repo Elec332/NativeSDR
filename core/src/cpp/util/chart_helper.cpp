@@ -3,9 +3,9 @@
 //
 
 #include <util/chart_helper.h>
-#include <NativeSDRGraphics.h>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 std::string utils::ui::getDbScale(double num) {
     return std::to_string((int) num);

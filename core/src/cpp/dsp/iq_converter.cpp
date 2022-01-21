@@ -25,8 +25,8 @@ namespace dsp {
     void convert8u(void* in, utils::complex* out, size_t complexSamples) {
         auto ini = (uint8_t*) in;
         for (int i = 0; i < complexSamples; ++i) {
-            out[i].im = (ini[i * 2] - 127.4f) * (1.0f/128.0f);
-            out[i].re = (ini[i * 2 + 1] - 127.4f) * (1.0f/128.0f);
+            out[i].im = (ini[i * 2] - 127.4f) * (1.0f / 128.0f);
+            out[i].re = (ini[i * 2 + 1] - 127.4f) * (1.0f / 128.0f);
         }
     }
 

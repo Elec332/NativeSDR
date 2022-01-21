@@ -26,10 +26,10 @@ public:
                 setValue();
             }
         });
-        addInput("Frequency Offset", utils::numberType(), offsetIn, [&](int){
+        addInput("Frequency Offset", utils::numberType(), offsetIn, [&](int) {
             setValue();
         });
-        addOutput("IQ out", utils::complexStreamType(), streamOut, true);
+        ocb = addOutput("IQ out", utils::complexStreamType(), streamOut, true);
 
         phase = zeroPhase;
     }
@@ -41,18 +41,18 @@ public:
 
     void setValue() {
         if (offsetIn && *offsetIn != 0) {
-            auto div = (double) -*offsetIn / sampleData->sampleRate;
+            auto div = (double) *offsetIn / sampleData->sampleRate;
             phase_increment = lv_cmake(std::cos(div * 2 * PI_DSP), std::sin(div * 2 * PI_DSP));
         } else {
             phase_increment = zeroPhase;
         }
+        ocb(1);
     }
 
     void loop() override {
         if (streamIn) {
             streamIn->read([&](const utils::complex* data, int len) {
                 streamOut->write([&](utils::complex* dat) {
-                    //memcpy(dat, data, len);
                     volk_32fc_s32fc_x2_rotator_32fc((lv_32fc_t*) dat, (lv_32fc_t*) data, phase_increment, &phase, len);
                     return len;
                 });
@@ -79,6 +79,7 @@ private:
     int* offsetIn = nullptr;
 
     pipeline::datastream<utils::complex>* streamOut;
+    pipeline::connection_callback ocb;
     utils::sampleData* sampleData;
 
     lv_32fc_t phase;

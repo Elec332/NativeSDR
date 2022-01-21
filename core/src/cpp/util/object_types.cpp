@@ -15,7 +15,7 @@ class stream_type : public simple_type<pipeline::datastream<T>> {
 
 public:
 
-    stream_type(std::string name, void(* drawer)(bool)) noexcept: simple_type(std::move(name), drawer) {
+    stream_type(std::string name, void(* drawer)(bool)) noexcept: simple_type<pipeline::datastream<T>>(std::move(name), drawer) {
     }
 
     void setConnectionCount(void* ref, size_t count) const override {
@@ -52,6 +52,10 @@ void drawNumberType(bool connected) {
     ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::Square, connected, ImColor(128, 128, 128), ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
 }
 
+void drawAudioStream(bool connected) {
+    ax::Widgets::Icon(ImVec2(24, 24), ax::Drawing::IconType::Flow, connected, ImColor(0, 255, 255), ImColor(32, 32, 32, (int) (ImGui::GetStyle().Alpha * 255)));
+}
+
 void init_object_types() {
 }
 
@@ -62,6 +66,7 @@ simple_type<std::string> string_data("String", drawStringType);
 simple_type<utils::drawFunc> ui("UI", drawUIType);
 simple_type<uint64_t> freq("Frequency", drawFrequencyType);
 simple_type<int> number("Number", drawNumberType);
+stream_type<utils::audio> audio_stream("Audio Stream", drawComplexStream);
 
 const utils::object_type<pipeline::datastream<utils::complex>>* utils::complexStreamType() {
     return &complex_stream;
@@ -91,3 +96,6 @@ const utils::object_type<int>* utils::numberType() {
     return &number;
 }
 
+const utils::object_type<pipeline::datastream<utils::audio>>* utils::audioStreamType() {
+    return &audio_stream;
+}

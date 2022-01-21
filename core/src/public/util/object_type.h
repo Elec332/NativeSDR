@@ -48,6 +48,8 @@ namespace utils {
 
     NATIVESDR_CORE_EXPORT const utils::object_type<int>* numberType();
 
+    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<utils::audio>>* audioStreamType();
+
 }
 
 #endif //NATIVESDR_OBJECT_TYPE_H

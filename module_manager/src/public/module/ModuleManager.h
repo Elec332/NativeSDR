@@ -17,18 +17,18 @@ public:
 
     virtual void onShutdownModule() = 0;
 
-    virtual ModuleInstance *createModuleContainer() = 0;
+    virtual ModuleInstance* createModuleContainer() = 0;
 
-    virtual void destroyModuleContainer(ModuleInstance *instance) = 0;
+    virtual void destroyModuleContainer(ModuleInstance* instance) = 0;
 
 };
 
 typedef std::shared_ptr<ModuleContainer> ModulePointer;
 
-ModulePointer getModule(const std::string &location);
+ModulePointer getModule(const std::string& location);
 
-ModulePointer getModule(libloader::library &lib);
+ModulePointer getModule(libloader::library& lib);
 
-std::list<ModulePointer> getModules(std::list<libloader::library> &libs);
+std::list<ModulePointer> getModules(std::list<libloader::library>& libs);
 
 #endif //NATIVESDR_MODULEMANAGER_H

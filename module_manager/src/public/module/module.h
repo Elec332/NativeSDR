@@ -17,8 +17,8 @@ MODULE_MARKER void initModule();
 
 MODULE_MARKER void onShutdownModule();
 
-MODULE_MARKER ModuleInstance *createModuleContainer();
+MODULE_MARKER ModuleInstance* createModuleContainer();
 
-MODULE_MARKER void destroyModuleContainer(ModuleInstance *instance);
+MODULE_MARKER void destroyModuleContainer(ModuleInstance* instance);
 
 #endif //NATIVESDR_MODULE_H

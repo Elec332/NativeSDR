@@ -10,7 +10,6 @@ set(ROOT_INCLUDE ${CMAKE_BASE_FOLDER}/CMakeBase.cmake)
 
 include(${ROOT_INCLUDE})
 fetchGTest(VERSION release-1.11.0)
-#setCentralOutput()
 forceX64()
 
 add_subdirectory("module_manager")
@@ -19,4 +18,10 @@ add_subdirectory("core")
 add_subdirectory("main")
 
 add_subdirectory("testmodule2")
-add_subdirectory("rtl-sdr")
+
+#TODO: Find libs for all compilers
+if(MSVC)
+    add_subdirectory("rtl-sdr") #Not on MSYS2
+else()
+    add_subdirectory("audio-sink") #No MSVC precompiled portaudio available
+endif()

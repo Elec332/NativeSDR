@@ -6,6 +6,7 @@
 #include <iostream>
 #include <set>
 #include <dsp/malloc.h>
+#include <stdexcept>
 
 template<class T>
 class stream_impl : public pipeline::datastream<T> {
@@ -29,7 +30,7 @@ public:
         int len = writer(writeBuf);
         if (len > pipeline::BUFFER_COUNT) {
             std::cout << ("Stream write too large! ") << readers << std::endl;
-            throw std::exception("Stream write too large!");
+            throw std::runtime_error("Stream write too large!");
         }
         {
             std::unique_lock<std::mutex> raii(writeMutex);
@@ -68,11 +69,14 @@ public:
         {
             std::unique_lock<std::mutex> raii(readMutex);
             readWait.wait(raii, [&] {
+                if (stopped) {
+                    return true;
+                }
                 std::lock_guard<std::mutex> raii3(readCountMutex);
                 if (readFinished.count(rVal)) {
                     return false;
                 }
-                return writeDone || stopped;
+                return writeDone;
             });
             if (stopped) {
                 return false;

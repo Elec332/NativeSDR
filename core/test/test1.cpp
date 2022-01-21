@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 TEST(example, sum_zero) {
-    ASSERT_EQ(0 ,testerrr());
+    ASSERT_EQ(0, testerrr());
 }
 
 TEST(example, sum_five) {

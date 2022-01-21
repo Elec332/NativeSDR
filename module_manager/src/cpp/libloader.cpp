@@ -6,12 +6,14 @@
 #include <module/libloader.h>
 
 #ifdef _WIN32
+
 #include <Windows.h>
+
 #else
 #include <dlfcn.h>
 #endif
 
-libloader::library::library(const std::string &path) : location(path) {
+libloader::library::library(const std::string& path) : location(path) {
 #ifdef _WIN32
     this->handle = LoadLibrary(path.c_str());
 #else
@@ -33,9 +35,9 @@ void libloader::library::close() {
 
 #ifdef _WIN32
 
-void *libloader::library::getSymbol(const std::string &name) const {
+void* libloader::library::getSymbol(const std::string& name) const {
 #ifdef _WIN32
-    return (void *) GetProcAddress((HMODULE) this->handle, name.c_str());
+    return (void*) GetProcAddress((HMODULE) this->handle, name.c_str());
 #else
     //todo
 #endif
@@ -55,7 +57,7 @@ libloader::library::~library() {
     close();
 }
 
-bool libloader::library::hasSymbol(const std::string &name) const {
+bool libloader::library::hasSymbol(const std::string& name) const {
     return getSymbol(name);
 }
 
@@ -63,14 +65,14 @@ std::string libloader::library::getLocation() const {
     return location;
 }
 
-libloader::library::library(libloader::library &&other) noexcept {
+libloader::library::library(libloader::library&& other) noexcept {
     location = other.location;
     handle = other.handle;
     other.handle = nullptr;
     other.location = "";
 }
 
-libloader::library &libloader::library::operator=(libloader::library &&other) noexcept {
+libloader::library& libloader::library::operator=(libloader::library&& other) noexcept {
     if (this != &other) {
         close();
         location = other.location;
@@ -81,18 +83,18 @@ libloader::library &libloader::library::operator=(libloader::library &&other) no
     return *this;
 }
 
-std::list<libloader::library> libloader::loadFolder(const std::string &path) {
+std::list<libloader::library> libloader::loadFolder(const std::string& path) {
     std::filesystem::path fp = path;
     return loadFolder(fp);
 }
 
-std::list<libloader::library> libloader::loadFolder(const std::filesystem::path &path) {
+std::list<libloader::library> libloader::loadFolder(const std::filesystem::path& path) {
     std::list<libloader::library> libs;
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
         return libs;
     }
     std::list<std::string> files;
-    for (auto const &dir_entry: std::filesystem::directory_iterator(path)) {
+    for (auto const& dir_entry: std::filesystem::directory_iterator(path)) {
         if (!std::filesystem::exists(dir_entry) || !std::filesystem::is_regular_file(dir_entry)) {
             continue;
         }
@@ -105,7 +107,7 @@ std::list<libloader::library> libloader::loadFolder(const std::filesystem::path 
     size_t length = 0;
     while (length != libs.size()) {
         length = libs.size();
-        files.remove_if([&](const std::string &file) {
+        files.remove_if([&](const std::string& file) {
             if (!libs.emplace_front(file).isLoaded()) {
                 libs.pop_front();
                 return false;

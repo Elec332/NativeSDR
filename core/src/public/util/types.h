@@ -18,6 +18,13 @@ namespace utils {
 
     } complex;
 
+    typedef struct audio {
+
+        float left;
+        float right;
+
+    } audio;
+
     typedef struct sampleData {
 
         uint64_t centerFreq;

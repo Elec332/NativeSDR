@@ -65,6 +65,7 @@ public:
             forEachBlock([&](const pipeline::block_data& block) {
                 joinPool.push_back(std::async(std::launch::async, [block]() {
                     block->getBlock()->stop();
+                    std::cout << "Stopped: " + block->getType() << std::endl;
                 }));
             });
             for (auto& a: joinPool) {
@@ -123,7 +124,13 @@ public:
             return;
         }
         std::ifstream ifs(path);
-        nlohmann::json json = nlohmann::json::parse(ifs);
+        nlohmann::json json = nullptr;
+        try {
+            json = nlohmann::json::parse(ifs);
+        } catch (std::exception& e) {
+            loading = false;
+            return;
+        }
         nlohmann::json nodes = json["nodes"];
         nlohmann::json links = json["links"];
         load(nodes);
@@ -188,7 +195,7 @@ public:
         wrapped_block wb = fromFactory(factory, counter++, name);
         counter += MAX_BLOCK_PINS;
         if (counter >= LINK_COUNTER_START) {
-            throw std::exception("Block limit reached!");
+            throw std::runtime_error("Block limit reached!");
         }
         wb->x = x;
         wb->y = y;
@@ -365,10 +372,10 @@ public:
 
     bool doConnect(ax::NodeEditor::PinId pinA, wrapped_block_instance* blockA, ax::NodeEditor::PinId pinB, wrapped_block_instance* blockB) override {
         if (linkCounter >= 0xFFFFFFFE) {
-            throw std::exception("Link overflow!");
+            throw std::runtime_error("Link overflow!");
         }
         if (pinA == pinB) {
-            throw std::exception("WHAT");
+            throw std::runtime_error("WHAT");
         }
         size_t id = linkCounter++;
         links[id] = std::make_shared<pipeline::link_instance>(id, pinA, pinB);

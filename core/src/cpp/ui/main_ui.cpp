@@ -161,6 +161,7 @@ void main_window::deinit() {
 void main_window::start(pipeline::schematic** nodes) {
     NativeGraphics::startMainWindow(drawmain, nodes);
 }
+
 class FreqBlock : public pipeline::block {
 
 public:
@@ -180,6 +181,7 @@ public:
     }
 
 };
+
 pipeline::block_ptr mainFB = std::make_shared<FreqBlock>(freqRef);
 
 pipeline::block_ptr main_window::createFrequencyBlock() {

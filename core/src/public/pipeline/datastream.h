@@ -60,6 +60,8 @@ namespace pipeline {
 
     };
 
+    NATIVESDR_CORE_EXPORT datastream<void>* createUnknownStream(int size);
+
     /**
      * Returns a new stream for the specified type.
      * WARNING: The returned stream will void any data received until a receiver count has been set!
@@ -71,7 +73,7 @@ namespace pipeline {
         return (datastream<T>*) createUnknownStream(sizeof(T));
     }
 
-    NATIVESDR_CORE_EXPORT datastream<void>* createUnknownStream(int size);
+    NATIVESDR_CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);
 
     /**
      * Deletes a data stream
@@ -82,8 +84,6 @@ namespace pipeline {
     void deleteStream(datastream<T>* stream) {
         deleteUnknownStream((datastream<void>*) stream);
     }
-
-    NATIVESDR_CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);
 
 }
 

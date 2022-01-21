@@ -7,17 +7,12 @@
 
 #include <util/types.h>
 #include <memory>
-#include <nativesdr_core_export.h>
+#include <dsp/dsp.h>
 
 namespace dsp {
 
     //Made for compatibility with multiple implementations, e.g. GPU acceleration
-    class fft_plan {
-
-    public:
-
-        virtual void execute() = 0;
-
+    class fft_plan : public dsp_plan {
     };
 
     typedef std::shared_ptr<fft_plan> fft_plan_ptr;
