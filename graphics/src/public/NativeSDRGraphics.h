@@ -5,20 +5,22 @@
 #ifndef NATIVESDR_NATIVESDRGRAPHICS_H
 #define NATIVESDR_NATIVESDRGRAPHICS_H
 
+#define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+
 #include <nativesdr_graphics_export.h>
-#include <imgui/imgui.h>
-#include <imgui/imgui_node_editor.h>
-#include <imgui/utilities/builders.h>
-#include <imgui/utilities/widgets.h>
-#include <imgui/implot.h>
-#include <imgui/imgui_stdlib.h>
-#include <imgui/utilities/imgui_math.h>
+#include <imgui.h>
+#include <imgui_stdlib.h>
+#include <imgui_node_editor.h>
+#include <builders.h>
+#include <drawing.h>
+#include <widgets.h>
+#include <implot.h>
+#include <imgui/imgui_math.h>
 #include <functional>
 
 #ifdef IM_INTERNAL
 
-#include <imgui/imgui_internal.h>
-#include <imgui/implot_internal.h>
+#include <imgui_internal.h>
 
 #endif
 

@@ -19,7 +19,7 @@ static float getLineDiff(double start, double stop, float& parts, double& diff) 
     auto rDiff = totalDiff / parts;
     auto mul = powl(10.0, floorl(log10l(rDiff))); //Get the nearest power of 10
     double mDiff;
-    for (auto& i: clips) {
+    for (auto& i : clips) {
         mDiff = (double) (i * mul);
         if (rDiff < mDiff) {
             break;
@@ -109,13 +109,14 @@ void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points,
         return;
     }
     ImVec2 ppu = partsPerUnit;
-    ppu.x = (end.x - start.x) / (float) pointCount;
+    ImVec2 zTart = start;
+    zTart.x++;
+    ppu.x = (end.x - zTart.x) / (float) (pointCount - 1);
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     int startIndex = inverted ? pointCount - 1 : 0;
-
-    ImVec2 poly[4] = {{start.x + ppu.x, (float) (end.y - ((points[startIndex] - yStart) * ppu.y))},
-                      {start.x,         0},
+    ImVec2 poly[4] = {{zTart.x,         std::min(std::max((float) (end.y - ((points[startIndex] - yStart) * ppu.y)), zTart.y), end.y)},
+                      {zTart.x - ppu.x, 0},
                       {0,               end.y},
                       {poly[0].x,       end.y}};
     int index = startIndex;
@@ -127,7 +128,7 @@ void drawChartLines(const ImVec2& start, const ImVec2& end, const float* points,
         } else {
             index++;
         }
-        lineEnd.y = end.y - (float) ((points[index] - yStart) * ppu.y);
+        lineEnd.y = std::min(std::max(end.y - (float) ((points[index] - yStart) * ppu.y), zTart.y), end.y);
         lineEnd.x += ppu.x * 2;
         if (inside) {
             poly[2].x = lineEnd.x;

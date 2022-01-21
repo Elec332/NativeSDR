@@ -6,10 +6,10 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "NativeSDRGraphics.h"
+#include <NativeSDRGraphics.h>
 
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <cstdio>
 #include <vector>
 
@@ -120,7 +120,7 @@ void ImGui::FocusCurrentWindow() {
 
 #define STB_IMAGE_IMPLEMENTATION
 extern "C" {
-#include "stb/stb_image.h"
+#include "stb_image.h"
 }
 
 struct TexInfo {
@@ -151,7 +151,12 @@ void UpdateTexture(TexInfo& texture, const void* data, int width, int height) {
 void ImGui::UpdateTexture(ImTextureID texture, const void* data, int width, int height) {
     auto textureIt = findTexture(texture);
     if (textureIt != g_Textures.end()) {
-        UpdateTexture(&textureIt, data, width, height);
+        if (textureIt->width == width && textureIt->height == height) {
+            glBindTexture(GL_TEXTURE_2D, textureIt->texID);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        } else {
+            UpdateTexture(*textureIt, data, width, height);
+        }
     }
 }
 
@@ -185,7 +190,7 @@ void ImGui::DeleteTexture(ImTextureID& texture) {
     if (textureIt == g_Textures.end()) {
         return;
     }
-    glDeleteTextures(1, &textureIt->texID);
+    glDeleteTextures(1, &(textureIt->texID));
     g_Textures.erase(textureIt);
     texture = nullptr;
 }
