@@ -83,15 +83,19 @@ libloader::library& libloader::library::operator=(libloader::library&& other) no
     return *this;
 }
 
+void libloader::loadFolder(std::list<libloader::library>& list, const std::string& path) {
+    std::filesystem::path fp = path;
+    loadFolder(list, fp);
+}
+
 std::list<libloader::library> libloader::loadFolder(const std::string& path) {
     std::filesystem::path fp = path;
     return loadFolder(fp);
 }
 
-std::list<libloader::library> libloader::loadFolder(const std::filesystem::path& path) {
-    std::list<libloader::library> libs;
+void libloader::loadFolder(std::list<libloader::library>& libs, const std::filesystem::path& path) {
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
-        return libs;
+        return;
     }
     std::list<std::string> files;
     for (auto const& dir_entry: std::filesystem::directory_iterator(path)) {
@@ -115,5 +119,10 @@ std::list<libloader::library> libloader::loadFolder(const std::filesystem::path&
             return true;
         });
     }
+}
+
+std::list<libloader::library> libloader::loadFolder(const std::filesystem::path& path) {
+    std::list<libloader::library> libs;
+    loadFolder(libs, path);
     return libs;
 }

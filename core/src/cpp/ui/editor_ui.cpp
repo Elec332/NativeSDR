@@ -2,8 +2,6 @@
 // Created by Elec332 on 04/11/2021.
 //
 
-#define IM_INTERNAL
-
 #include <ui/editor_ui.h>
 #include <iostream>
 

@@ -8,7 +8,7 @@
 #include <memory>
 #include <util/types.h>
 #include <pipeline/datastream.h>
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 
 namespace dsp {
 
@@ -40,7 +40,7 @@ namespace dsp {
     typedef std::shared_ptr<dsp_plan_io> dsp_plan_io_ptr;
     typedef std::shared_ptr<dsp_plan_ios> dsp_plan_ios_ptr;
 
-    NATIVESDR_CORE_EXPORT dsp_plan_ios_ptr resamplingWindow(size_t sampleRate, size_t bandwidth, size_t inSize, size_t newSampleRate, size_t newBandwidth);
+    CORE_EXPORT dsp_plan_ios_ptr resamplingWindow(size_t sampleRate, size_t bandwidth, size_t inSize, size_t newSampleRate, size_t newBandwidth);
 
 }
 

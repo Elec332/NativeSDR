@@ -35,7 +35,8 @@ public:
     void setFrequency(uint64_t newFreq) {
         if (device) {
             rtlsdr_set_center_freq(device, newFreq);
-            centerFreq = rtlsdr_get_center_freq64(device);
+//            centerFreq = rtlsdr_get_center_freq64(device);
+            centerFreq = rtlsdr_get_center_freq(device);
             *freq = centerFreq;
             sampleData->centerFreq = centerFreq;
         }
@@ -71,7 +72,8 @@ public:
             }
             rtlsdr_set_sample_rate(device, 2400000);
             sampleData->sampleRate = sampleData->bandwidth = 2400000;
-            rtlsdr_set_and_get_tuner_bandwidth(device, sampleData->sampleRate, &sampleData->bandwidth, 0);
+            rtlsdr_set_tuner_bandwidth(device, sampleData->sampleRate); sampleData->bandwidth = sampleData->sampleRate;
+//            rtlsdr_set_and_get_tuner_bandwidth(device, sampleData->sampleRate, &sampleData->bandwidth, 0);
             std::cout << "BW " << sampleData->bandwidth << std::endl;
             rtlsdr_reset_buffer(device);
             cb(1);

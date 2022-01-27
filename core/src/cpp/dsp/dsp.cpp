@@ -99,12 +99,11 @@ namespace dsp {
                 if (blIdx >= outLen) {
                     out->write([&](utils::complex* stream) {
                         memcpy(stream, backlog, outLen * sizeof(utils::complex));
-                        return outLen;
+                        return (int) outLen;
                     });
                     blIdx = 0;
                 }
-                volk_32fc_32f_dot_prod_32fc((lv_32fc_t*) &backlog[blIdx++], (lv_32fc_t*) &fullBuf[i],
-                                            polyTaps[tapCounter], polyTapLen);
+                volk_32fc_32f_dot_prod_32fc((lv_32fc_t*) &backlog[blIdx++], (lv_32fc_t*) &fullBuf[i], polyTaps[tapCounter], polyTapLen);
 
                 tapCounter += decimation;
                 i += tapCounter / interpolation;

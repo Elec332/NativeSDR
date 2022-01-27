@@ -7,7 +7,7 @@
 
 #include <NativeSDRGraphics.h>
 #include <util/object_type.h>
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 #include <list>
 #include <utility>
 #include <memory>
@@ -26,7 +26,7 @@ namespace pipeline {
 
     class block_connection_base_instance {
 
-        NATIVESDR_CORE_EXPORT static pipeline::block_connection_base createBlockConnectionImpl(const std::string& name, const utils::object_type_base* type, void*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id, const std::type_info& type_info);
+        CORE_EXPORT static pipeline::block_connection_base createBlockConnectionImpl(const std::string& name, const utils::object_type_base* type, void*& object, const pipeline::connection_callback& callback, bool multi, uint8_t id, const std::type_info& type_info);
 
     public:
 

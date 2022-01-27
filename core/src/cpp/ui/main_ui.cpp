@@ -167,7 +167,6 @@ class FreqBlock : public pipeline::block {
 public:
 
     explicit FreqBlock(uint64_t*& freq) : pipeline::block("Frequency Chooser", ImColor(255, 255, 0)) {
-        std::cout << "NEWFC" << std::endl;
         callback = addOutput("Frequency", utils::frequencyType(), freq, true);
     }
 

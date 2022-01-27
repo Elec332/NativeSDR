@@ -74,9 +74,13 @@ namespace libloader {
 
     };
 
+    void loadFolder(std::list<libloader::library>& list, const std::string& path);
+
     std::list<libloader::library> loadFolder(const std::string& path);
 
 #if defined(_FILESYSTEM_) || defined(_GLIBCXX_FILESYSTEM)
+
+    void loadFolder(std::list<libloader::library>& list, const std::filesystem::path& path);
 
     std::list<libloader::library> loadFolder(const std::filesystem::path& path);
 

@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_DATASTREAM_H
 #define NATIVESDR_DATASTREAM_H
 
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 #include <cstdlib>
 #include <mutex>
 #include <condition_variable>
@@ -60,7 +60,7 @@ namespace pipeline {
 
     };
 
-    NATIVESDR_CORE_EXPORT datastream<void>* createUnknownStream(int size);
+    CORE_EXPORT datastream<void>* createUnknownStream(int size);
 
     /**
      * Returns a new stream for the specified type.
@@ -73,7 +73,7 @@ namespace pipeline {
         return (datastream<T>*) createUnknownStream(sizeof(T));
     }
 
-    NATIVESDR_CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);
+    CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);
 
     /**
      * Deletes a data stream

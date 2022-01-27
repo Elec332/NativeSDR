@@ -5,10 +5,11 @@
 #ifndef NATIVESDR_CORE_H
 #define NATIVESDR_CORE_H
 
-#include <nativesdr_core_export.h>
+#include <core_export.h>
+#include <thread>
 
-NATIVESDR_CORE_EXPORT int startCore(int argc, char* argv[]);
+CORE_EXPORT int startCore(int argc, char* argv[]);
 
-NATIVESDR_CORE_EXPORT int testerrr();
+CORE_EXPORT int testerrr();
 
 #endif //NATIVESDR_CORE_H

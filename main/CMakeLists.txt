@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_CXX_STANDARD 17)
-project(NativeSDR_main)
+project(main)
 
 addProject(EXEC)
-installRuntime()
+installRuntime(DEV)
+setCentralOutput()
 
-useLibrary(NativeSDR_core)
+useLibrary(NativeSDR::core)

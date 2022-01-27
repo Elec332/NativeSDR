@@ -3,7 +3,6 @@
 //
 
 #include <dsp/iq_converter.h>
-#include <volk/volk.h>
 #include <iostream>
 #include <dsp/fft.h>
 #include "ui/sdr_ui.h"

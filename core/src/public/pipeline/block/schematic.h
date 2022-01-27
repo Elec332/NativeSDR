@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <pipeline/block/node_manager.h>
 #include <pipeline/block/block_data.h>
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 
 namespace pipeline {
 
@@ -56,9 +56,9 @@ namespace pipeline {
 
     };
 
-    NATIVESDR_CORE_EXPORT pipeline::schematic* newSchematic(pipeline::node_manager* nodeManager, const std::filesystem::path& file);
+    CORE_EXPORT pipeline::schematic* newSchematic(pipeline::node_manager* nodeManager, const std::filesystem::path& file);
 
-    NATIVESDR_CORE_EXPORT void deleteSchematic(pipeline::schematic* schematic);
+    CORE_EXPORT void deleteSchematic(pipeline::schematic* schematic);
 
     struct link_instance {
 

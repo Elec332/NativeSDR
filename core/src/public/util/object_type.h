@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_OBJECT_TYPE_H
 #define NATIVESDR_OBJECT_TYPE_H
 
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 #include <string>
 #include <util/types.h>
 #include <pipeline/datastream.h>
@@ -34,21 +34,21 @@ namespace utils {
 
     typedef std::function<void(size_t random)> drawFunc;
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<utils::complex>>* complexStreamType();
+    CORE_EXPORT const utils::object_type<pipeline::datastream<utils::complex>>* complexStreamType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<uint8_t>>* dataStreamType();
+    CORE_EXPORT const utils::object_type<pipeline::datastream<uint8_t>>* dataStreamType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<utils::sampleData>* sampleDataType();
+    CORE_EXPORT const utils::object_type<utils::sampleData>* sampleDataType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<std::string>* stringType();
+    CORE_EXPORT const utils::object_type<std::string>* stringType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<utils::drawFunc>* uiType();
+    CORE_EXPORT const utils::object_type<utils::drawFunc>* uiType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<uint64_t>* frequencyType();
+    CORE_EXPORT const utils::object_type<uint64_t>* frequencyType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<int>* numberType();
+    CORE_EXPORT const utils::object_type<int>* numberType();
 
-    NATIVESDR_CORE_EXPORT const utils::object_type<pipeline::datastream<utils::audio>>* audioStreamType();
+    CORE_EXPORT const utils::object_type<pipeline::datastream<utils::audio>>* audioStreamType();
 
 }
 

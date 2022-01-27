@@ -16,15 +16,23 @@ int startCore(int argc, char* argv[]) {
     std::filesystem::path exec(argv[0]);
     exec = exec.parent_path();
 
+    std::string extraDir;
+    if (argc > 2 && argv[1] == std::string("-md")) {
+        extraDir += argv[2];
+    }
+
     init_malloc();
-    fftwf_init_threads();
-    fftwf_plan_with_nthreads(4);
+//    fftwf_init_threads(); TODO: Check
+//    fftwf_plan_with_nthreads(4);
     fftwf_set_timelimit(0.003);
     main_window::init();
     sdr_ui::init();
     editor_ui::init();
 
     std::list<libloader::library> libs = libloader::loadFolder(exec / "modules");
+    if (!extraDir.empty()) {
+        libloader::loadFolder(libs, extraDir);
+    }
     std::list<ModulePointer> modules = getModules(libs);
     std::map<ModuleInstance*, ModuleContainer*> dealloc;
 

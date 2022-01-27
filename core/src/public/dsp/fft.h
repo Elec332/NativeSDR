@@ -17,7 +17,7 @@ namespace dsp {
 
     typedef std::shared_ptr<fft_plan> fft_plan_ptr;
 
-    NATIVESDR_CORE_EXPORT dsp::fft_plan_ptr create_plan(int length, utils::complex* in, utils::complex* out, bool forward);
+    CORE_EXPORT dsp::fft_plan_ptr create_plan(int length, utils::complex* in, utils::complex* out, bool forward);
 
 }
 

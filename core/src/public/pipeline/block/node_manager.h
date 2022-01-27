@@ -6,7 +6,7 @@
 #define NATIVESDR_NODE_MANAGER_H
 
 #include <pipeline/block/block.h>
-#include <nativesdr_core_export.h>
+#include <core_export.h>
 
 namespace pipeline {
 
@@ -26,8 +26,8 @@ namespace pipeline {
 
 }
 
-NATIVESDR_CORE_EXPORT pipeline::node_manager* newNodeManager();
+CORE_EXPORT pipeline::node_manager* newNodeManager();
 
-NATIVESDR_CORE_EXPORT void deleteNodeManager(pipeline::node_manager* nodeManager);
+CORE_EXPORT void deleteNodeManager(pipeline::node_manager* nodeManager);
 
 #endif //NATIVESDR_NODE_MANAGER_H

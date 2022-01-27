@@ -5,8 +5,6 @@
 #ifndef NATIVESDR_SDR_UI_H
 #define NATIVESDR_SDR_UI_H
 
-#define IM_INTERNAL
-
 #include <NativeSDRGraphics.h>
 #include <pipeline/block/block.h>
 #include <pipeline/block/schematic.h>
