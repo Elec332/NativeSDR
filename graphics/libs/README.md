@@ -1,5 +1,5 @@
 # NativeSDR Source libraries
-All libraries in this folder with the exception of glew and GLFW are source libraries.
+All libraries in this folder are source libraries.
 
 The "imgui" & "imgui-stdlib" deps are part of the well-known imgui library, original source: https://github.com/ocornut/imgui \
 The "imgui_node_editor" & "imgui_node_editor_blueprints" deps are part of the imgui-addon "imgui-node-editor", original source: https://github.com/thedmd/imgui-node-editor \

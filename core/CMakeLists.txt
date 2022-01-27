@@ -15,7 +15,7 @@ createSharedLibrary(Volk COMPONENTS volk USE PUBLIC INSTALL /)
 if(WIN32 AND NOT MSVC)
     createSharedLibrary(orc-0.4 USE FILE orc-0.4-0 INSTALL /)
 endif()
-createSharedLibrary(libusb-1.0 PUBLIC INSTALL / GLOBAL)
+createSharedLibrary(libusb-1.0 FIND_HEADER libusb-1.0/libusb.h HEADER_DIR libusb-1.0 PUBLIC INSTALL / GLOBAL)
 useHeaderLibrary(json)
 
 addTest()
