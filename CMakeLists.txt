@@ -23,7 +23,7 @@ add_subdirectory("testmodule2")
 add_subdirectory("audio-sink")
 
 #TODO: Find libs for all compilers
-if(MSVC)
+if(NOT WIN32 OR MSVC)
     add_subdirectory("rtl-sdr") #Not on MSYS2
 endif()
 

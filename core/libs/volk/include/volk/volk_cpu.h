@@ -39,8 +39,6 @@ struct VOLK_CPU {
     int (*has_neonv8) ();
     int (*has_32) ();
     int (*has_64) ();
-    int (*has_3dnow) ();
-    int (*has_abm) ();
     int (*has_popcount) ();
     int (*has_mmx) ();
     int (*has_fma) ();
