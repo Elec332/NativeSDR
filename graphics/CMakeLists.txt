@@ -10,8 +10,11 @@ add_compile_definitions(IMGUI_API=GRAPHICS_EXPORT)
 add_compile_definitions(IMPLOT_API=GRAPHICS_EXPORT)
 add_compile_definitions(IMGUI_IMPL_API=)
 
-createSharedLibrary(GLEW COMPONENTS glew USE INSTALL /)
-createSharedLibrary(GLFW3 NAME glfw USE INSTALL /)
+findLibrary(GLEW COMPONENTS glew)
+findLibrary(GLFW3 NAME glfw)
+
+useLibraries(NAMES GLEW::glew glfw PRIVATE WIN_INSTALL /)
+
 useSourceLibrary(stb PRIVATE)
 useSourceLibrary(imgui)
 useSourceLibrary(imgui-stdlib)

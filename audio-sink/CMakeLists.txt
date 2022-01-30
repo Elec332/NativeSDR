@@ -3,4 +3,5 @@ set(CMAKE_CXX_STANDARD 17)
 project(NativeSDR_audio-sink)
 
 addModule()
-createSharedLibrary(portaudio USE INSTALL /)
+findLibrary(portaudio)
+useLibraries(portaudio PRIVATE WIN_INSTALL ${MODULE_DIR})

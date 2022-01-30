@@ -3,4 +3,5 @@ set(CMAKE_CXX_STANDARD 17)
 project(NativeSDR_rtl-sdr)
 
 addModule()
-createSharedLibrary(rtlsdr COMPONENTS rtlsdr USE INSTALL modules)#DEPENDENCIES libusb
+findLibrary(rtlsdr COMPONENTS rtlsdr)#DEPENDENCIES libusb
+useLibraries(rtlsdr::rtlsdr PRIVATE WIN_INSTALL ${MODULE_DIR})
