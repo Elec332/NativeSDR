@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_WRAPPED_BLOCK_H
 #define NATIVESDR_WRAPPED_BLOCK_H
 
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 #include <pipeline/block/schematic.h>
 
 class wrapped_block_instance;

@@ -12,7 +12,7 @@
 #include <utility>
 #include <memory>
 #include <iostream>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 #define MAX_BLOCK_PINS 31
 
