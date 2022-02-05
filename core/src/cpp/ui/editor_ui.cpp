@@ -12,8 +12,8 @@ static ImTextureID background = nullptr;
 
 static bool showPinId = false;
 
-void editor_ui::init() {
-    background = ImGui::LoadTexture("assets/BlueprintBackground.png");
+void editor_ui::init(const std::string& rootDir) {
+    background = ImGui::LoadTexture((rootDir + "/assets/BlueprintBackground.png").c_str());
 }
 
 void editor_ui::deinit() {

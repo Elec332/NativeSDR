@@ -15,13 +15,14 @@
 >In case the project uses a different layout than described above, or in case you want to add the sources to the library or executable by hand, pass the `NO_SOURCES` parameter.
 >
 >In the case of a shared library, the `withExportHeaders` macro is called, which creates an export header and includes it in the project.
->
+>If this header needs to be in a sub-folder, it can be defined with `EXPORT_HEADER_DIR`
+> 
 >In the case of a shared library or an executable, the runtime dependencies will be copied to the build folder if the OS is `WIN32` to ensure it can be run straight from the IDE.
 >
 >If the project is a subproject of a larger project, a target alias of `ROOT_PROJ_NAME::PROJ_NAME` will be added to ensure the dependency names are the same after an installation with exported CMake files.
 >
 >#### Usage
->>addProject({LIB | LIBRARY} {SHARED | STATIC} [NO_SOURCES])
+>>addProject({LIB | LIBRARY} {SHARED | STATIC} [NO_SOURCES] [EXPORT_HEADER_DIR <<g>dir>])
 > 
 >>addProject(EXECUTABLE [NO_SOURCES])
 
@@ -101,13 +102,13 @@
 > 
 > If the `CLOSED` parameter is not defined, the `/libs/${name}/cpp` and `/libs/${name}/c` will be added as private include directories as well, so any headers in those folders can be properly included aswell.
 
-> ##includeDirectory(folder)
+> ## includeDirectory(folder)
 > Wrapper for the `target_include_directories` function
 > Define the `PUBLIC` or `PRIVATE` parameter to indicate public or private include directories. \
 > Automatically adds the directories to the current project and defines `$<BUILD_INTERFACE:${folder}>` where necessary
 
 
-> ##getRemoteLibrary(name)
+> ## getRemoteLibrary(name)
 > Fetches a remote repository and build the contained project if needed. If `GIT_TAG` is not provided it will default to `master`
 > #### Usage
 >>getRemoteLibrary(<<t>name> \
@@ -122,6 +123,27 @@
 > If `NO_BUILD` is defined, the function will return immediately.
 > If this is not the case, the function will build the target, adding the build parameters defined by `BUILD_ARGS` to the argument list. \
 > If `FIND` is defined, the `find_package` command will be run after the build with the `FIND` value as it's parameter(s)
+
+> ## useRemoteSource(remoteLibrary name)
+> Adds the sources provided by the remote library defined by `remoteLibrary` as a new source library under the name `name`, in a similar fashion to the `useSourceLibrary(name)` function;
+> 
+> #### Usage
+>> useRemoteSource(<<g>remoteLibrary> <<g>name> \
+>> [ROOT <root_dir>] \
+>> [PUBLIC_HEADER_DIR <header_dir_prefix>] \
+>> [PUBLIC_HEADER_FILES <name_or_regex1> <name_or_regex1> ...] \
+>> [PRIVATE_HEADER_FILES <name_or_regex1> <name_or_regex1> ...] \
+>> [SOURCE_FILES <name_or_regex1> <name_or_regex1> ...] \
+>> [CLOSED] \
+>>)
+> 
+> If `ROOT` is defined it will be used as the base search folder for finding all files
+> `PUBLIC_HEADER_DIR` is for giving public header files an offset which wasn't in the original repo. All other files will be checked and have the place to search for these headers altered.
+> 
+> The `PUBLIC_HEADER_FILES`, `PRIVATE_HEADER_FILES` and `SOURCE_FILES` are for defining which files belong to which type. They are also handled in this order, so if you include 1 header into the public headers, and then you use the regex `*.h` for the private header, the 1 header already used as public will be skipped. \
+> This function does not check recursively. Examples for valid entries: `import.h` `*glfw*.*` `project/sources/*.c`
+> 
+> If the `CLOSED` parameter is not defined, the source directory will be added as a private include directory, so any headers in that folder can be properly included.
 
 ---
 # Utility functions

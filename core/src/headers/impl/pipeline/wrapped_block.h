@@ -6,7 +6,7 @@
 #define NATIVESDR_WRAPPED_BLOCK_H
 
 #include <nlohmann/json.hpp>
-#include <pipeline/block/schematic.h>
+#include <nativesdr/pipeline/block/schematic.h>
 
 class wrapped_block_instance;
 

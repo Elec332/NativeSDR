@@ -4,12 +4,12 @@
 
 #define IM_INTERNAL
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <GLFW/glfw3.h>
-#include <NativeSDRGraphics.h>
+#include <nativesdr/NativeSDRGraphics.h>
 
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <cstdio>
 #include <vector>
 
@@ -120,7 +120,7 @@ void ImGui::FocusCurrentWindow() {
 
 #define STB_IMAGE_IMPLEMENTATION
 extern "C" {
-#include "stb_image.h"
+#include "nativesdr/stb/stb_image.h"
 }
 
 struct TexInfo {

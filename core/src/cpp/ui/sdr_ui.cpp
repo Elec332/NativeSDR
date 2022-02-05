@@ -2,9 +2,8 @@
 // Created by Elec332 on 04/11/2021.
 //
 
-#include <dsp/iq_converter.h>
+#include <nativesdr/dsp/iq_converter.h>
 #include <iostream>
-#include <dsp/fft.h>
 #include "ui/sdr_ui.h"
 
 bool showMenu = true;

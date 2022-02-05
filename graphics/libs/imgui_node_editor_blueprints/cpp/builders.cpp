@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 # include "builders.h"
 # define IMGUI_DEFINE_MATH_OPERATORS
-# include <imgui_internal.h>
+# include <nativesdr/graphics/imgui_internal.h>
 
 
 //------------------------------------------------------------------------------

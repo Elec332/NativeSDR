@@ -2,10 +2,10 @@
 // Created by Elec332 on 12/11/2021.
 //
 
-#include <pipeline/datastream.h>
+#include <nativesdr/pipeline/datastream.h>
 #include <iostream>
 #include <set>
-#include <dsp/malloc.h>
+#include <nativesdr/dsp/malloc.h>
 #include <stdexcept>
 
 template<class T>

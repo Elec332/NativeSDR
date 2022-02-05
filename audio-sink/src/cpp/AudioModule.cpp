@@ -2,8 +2,8 @@
 // Created by Elec332 on 09/12/2021.
 //
 
-#include <module/SDRModule.h>
-#include <AudioModule.h>
+#include <nativesdr/module/SDRModule.h>
+#include <nativesdr/AudioModule.h>
 #include <portaudio.h>
 
 class Module : public ModuleInstance {

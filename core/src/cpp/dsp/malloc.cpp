@@ -2,7 +2,7 @@
 // Created by Elec332 on 13/11/2021.
 //
 
-#include <dsp/malloc.h>
+#include <nativesdr/dsp/malloc.h>
 #include <volk/volk.h>
 
 static size_t alignment = 16;

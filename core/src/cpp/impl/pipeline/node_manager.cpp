@@ -1,7 +1,7 @@
 //
 // Created by Elec332 on 04/11/2021.
 //
-#include <pipeline/block/node_manager.h>
+#include <nativesdr/pipeline/block/node_manager.h>
 #include <map>
 
 class node_manager_impl : public pipeline::node_manager {

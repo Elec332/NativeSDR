@@ -7,7 +7,7 @@
 
 #include <ui/editor_ui.h>
 #include <ui/sdr_ui.h>
-#include <pipeline/block/schematic.h>
+#include <nativesdr/pipeline/block/schematic.h>
 
 namespace main_window {
 

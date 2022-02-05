@@ -2,11 +2,11 @@
 // Created by Elec332 on 22/10/2021.
 //
 
-#include <NativeSDRGraphics.h>
+#include <nativesdr/NativeSDRGraphics.h>
 #include <impl/util/object_types_internal.h>
 
 #include <utility>
-#include <util/object_type.h>
+#include <nativesdr/util/object_type.h>
 
 #include "subinit.h"
 

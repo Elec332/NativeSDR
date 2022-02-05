@@ -2,8 +2,8 @@
 // Created by Elec332 on 10/07/2021.
 //
 
-#include <module/SDRModule.h>
-#include <TestModule.h>
+#include <nativesdr/module/SDRModule.h>
+#include <nativesdr/TestModule.h>
 
 class TestBlockSI : public pipeline::block {
 

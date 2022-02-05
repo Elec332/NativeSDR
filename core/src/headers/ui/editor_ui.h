@@ -5,11 +5,11 @@
 #ifndef NATIVESDR_EDITOR_UI_H
 #define NATIVESDR_EDITOR_UI_H
 
-#include <pipeline/block/schematic.h>
+#include <nativesdr/pipeline/block/schematic.h>
 
 namespace editor_ui {
 
-    void init();
+    void init(const std::string& rootDir);
 
     void draw(pipeline::schematic* nodes);
 

@@ -2,12 +2,12 @@
 // Created by Elec332 on 09/12/2021.
 //
 
-#include <AudioModule.h>
+#include <nativesdr/AudioModule.h>
 #include <portaudio.h>
-#include <dsp/malloc.h>
+#include <nativesdr/dsp/malloc.h>
 #include <set>
 #include <utility>
-#include <dsp/dsp.h>
+#include <nativesdr/dsp/dsp.h>
 
 #define DEFAULT_SAMPLE_RATE 48000
 static const int defaultSampleRates[] = {

@@ -48,8 +48,8 @@
 # define __IMGUI_EX_CANVAS_H__
 # pragma once
 
-# include <imgui.h>
-# include <imgui_internal.h> // ImRect, ImFloor
+# include <nativesdr/graphics/imgui.h>
+# include <nativesdr/graphics/imgui_internal.h> // ImRect, ImFloor
 
 namespace ImGuiEx {
 

@@ -2,8 +2,8 @@
 // Created by Elec332 on 03/12/2021.
 //
 
-#include <TestModule.h>
-#include <dsp/malloc.h>
+#include <nativesdr/TestModule.h>
+#include <nativesdr/dsp/malloc.h>
 #include <volk/volk.h>
 
 class VFOBlock : public pipeline::threaded_block {

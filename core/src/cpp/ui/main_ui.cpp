@@ -3,7 +3,7 @@
 //
 
 #include <ui/main_window.h>
-#include <NativeSDRGraphics.h>
+#include <nativesdr/NativeSDRGraphics.h>
 
 #define FREQUENCY_NUMBERS 12
 

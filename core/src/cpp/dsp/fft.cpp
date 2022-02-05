@@ -2,7 +2,7 @@
 // Created by Elec332 on 23/10/2021.
 //
 
-#include <dsp/fft.h>
+#include <nativesdr/dsp/fft.h>
 #include <fftw3.h>
 
 class fft_impl : public dsp::fft_plan {

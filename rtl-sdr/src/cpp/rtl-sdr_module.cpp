@@ -2,8 +2,8 @@
 // Created by Elec332 on 26/11/2021.
 //
 
-#include <module/SDRModule.h>
-#include <rtl-sdr_block.h>
+#include <nativesdr/module/SDRModule.h>
+#include <nativesdr/rtl-sdr_block.h>
 
 class RTLSDRModule : public ModuleInstance {
 

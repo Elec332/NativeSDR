@@ -2,9 +2,9 @@
 // Created by Elec332 on 09/12/2021.
 //
 
-#include <TestModule.h>
-#include <dsp/malloc.h>
-#include "dsp/dsp.h"
+#include <nativesdr/TestModule.h>
+#include <nativesdr/dsp/malloc.h>
+#include <nativesdr/dsp/dsp.h>
 
 class ResampleBlock : public pipeline::threaded_block {
 

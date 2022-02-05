@@ -15,7 +15,7 @@
 
 
 //------------------------------------------------------------------------------
-# include <imgui.h>
+# include <nativesdr/graphics/imgui.h>
 # include <cstdint> // std::uintXX_t
 # include <utility> // std::move
 

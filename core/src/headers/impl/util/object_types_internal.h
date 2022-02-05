@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_OBJECT_TYPES_INTERNAL_H
 #define NATIVESDR_OBJECT_TYPES_INTERNAL_H
 
-#include <util/object_type.h>
+#include <nativesdr/util/object_type.h>
 
 template<class T>
 class abstract_type : public utils::object_type<T> {

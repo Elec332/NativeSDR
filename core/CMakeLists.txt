@@ -7,9 +7,9 @@ installRuntime(DEV)
 setCentralOutput()
 
 findLibrary(fftw3f NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)
-findLibrary(Volk COMPONENTS volk QUIET)
 findLibrary(libusb-1.0 FIND_HEADER libusb-1.0/libusb.h HEADER_DIR libusb-1.0 REQUIRED)
 
+findLibrary(Volk COMPONENTS volk QUIET)
 if(NOT TARGET Volk::volk)
     findPython()
     ensurePythonModule("mako >= 0.4.2" mako "mako.__version__ >= '0.4.2'")

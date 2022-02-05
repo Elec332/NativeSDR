@@ -2,7 +2,7 @@
 // Created by Elec332 on 30/10/2021.
 //
 
-#include <dsp/iq_converter.h>
+#include <nativesdr/dsp/iq_converter.h>
 #include <volk/volk.h>
 
 namespace dsp {

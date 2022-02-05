@@ -2,9 +2,9 @@
 // Created by Elec332 on 10/07/2021.
 //
 
-#include <core.h>
+#include <nativesdr/core.h>
 #include <filesystem>
-#include <module/SDRModule.h>
+#include <nativesdr/module/SDRModule.h>
 #include <module/ModuleManager.h>
 #include <iostream>
 #include <fftw3.h>
@@ -27,7 +27,7 @@ int startCore(int argc, char* argv[]) {
     fftwf_set_timelimit(0.003);
     main_window::init();
     sdr_ui::init();
-    editor_ui::init();
+    editor_ui::init(exec.string());
 
     std::list<libloader::library> libs = libloader::loadFolder(exec / "modules");
     if (!extraDir.empty()) {

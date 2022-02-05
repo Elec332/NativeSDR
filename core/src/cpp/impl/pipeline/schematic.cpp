@@ -3,7 +3,7 @@
 //
 
 #include <mutex>
-#include <pipeline/block/schematic.h>
+#include <nativesdr/pipeline/block/schematic.h>
 #include <map>
 #include <impl/pipeline/wrapped_block.h>
 #include <impl/pipeline/schematic_links.h>

@@ -2,10 +2,10 @@
 // Created by Elec332 on 26/11/2021.
 //
 
-#include <rtl-sdr_block.h>
+#include <nativesdr/rtl-sdr_block.h>
 #include <rtl-sdr.h>
-#include "dsp/malloc.h"
-#include "dsp/iq_converter.h"
+#include <nativesdr/dsp/malloc.h>
+#include <nativesdr/dsp/iq_converter.h>
 
 class RTLSDRBlock : public pipeline::threaded_block {
 

@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_SUBINIT_H
 #define NATIVESDR_SUBINIT_H
 
-#include <pipeline/block/node_manager.h>
+#include <nativesdr/pipeline/block/node_manager.h>
 
 void init_object_types();
 

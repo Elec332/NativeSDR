@@ -2,13 +2,13 @@
 // Created by Elec332 on 13/11/2021.
 //
 
-#include <TestModule.h>
+#include <nativesdr/TestModule.h>
 #include <volk/volk.h>
-#include <dsp/fft.h>
-#include <dsp/iq_converter.h>
-#include <dsp/malloc.h>
-#include <dsp/windows.h>
-#include <util/chart_helper.h>
+#include <nativesdr/dsp/fft.h>
+#include <nativesdr/dsp/iq_converter.h>
+#include <nativesdr/dsp/malloc.h>
+#include <nativesdr/dsp/windows.h>
+#include <nativesdr/util/chart_helper.h>
 #include "../../../core/src/headers/util/wav_reader.h"
 
 class FFTTestBlock : public pipeline::threaded_block {
@@ -155,7 +155,8 @@ private:
 class FileStreamTestBlock : public pipeline::threaded_block {
 
     //std::string fileName = "D:/Downloads/15-29-07_92783258Hz.wav";
-    std::string fileName = "D:/Downloads/ecars_net_7255_HDSDR_20180225_174354Z_7255kHz_RF.wav";
+//    std::string fileName = "D:/Downloads/ecars_net_7255_HDSDR_20180225_174354Z_7255kHz_RF.wav";
+    std::string fileName = "E:\\SDR\\Data\\IQ\\2020_03_17\\Ilyama\\445057332_1.wav";
 
 public:
 
@@ -194,7 +195,7 @@ public:
     }
 
     void loop() override {
-        int samples = 1024 * 16;
+        int samples = 1024 * 128;
         int elementSize = sizeof(int16_t) * 2;
         stream->write([&](utils::complex* dat) {
             auto len = fread(buf, elementSize, samples, file);

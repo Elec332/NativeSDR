@@ -5,7 +5,7 @@
 #ifndef NATIVESDR_BLOCK_CONNECTION_H
 #define NATIVESDR_BLOCK_CONNECTION_H
 
-#include <pipeline/block/block.h>
+#include <nativesdr/pipeline/block/block.h>
 
 class schematic_link_handler;
 

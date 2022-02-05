@@ -1,14 +1,14 @@
 //
 // Created by Elec332 on 09/12/2021.
 //
-#include <dsp/dsp.h>
-#include <dsp/malloc.h>
+#include <nativesdr/dsp/dsp.h>
+#include <nativesdr/dsp/malloc.h>
 #include <volk/volk.h>
 #include <iostream>
 #include <cassert>
 #include <numeric>
 #include <cstring>
-#include <dsp/windows.h>
+#include <nativesdr/dsp/windows.h>
 
 namespace dsp {
 

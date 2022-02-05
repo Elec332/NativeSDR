@@ -13,6 +13,7 @@ forceX64()
 makeRootCMakeConfig(FILES ${CMAKE_BASE_FOLDER}/DefaultModuleConfig.cmake ${CMAKE_BASE_FOLDER}/CMakeBase.cmake)
 
 checkInstallFiles()
+set(EXPORT_HEADER_BASE_DIR nativesdr)
 
 add_subdirectory(module_manager)
 add_subdirectory(graphics)

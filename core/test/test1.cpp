@@ -2,7 +2,7 @@
 // Created by Elec332 on 24/10/2021.
 //
 
-#include <core.h>
+#include "nativesdr/core.h"
 #include "gtest/gtest.h"
 
 TEST(example, sum_zero) {

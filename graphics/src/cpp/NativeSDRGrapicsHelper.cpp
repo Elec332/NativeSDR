@@ -4,7 +4,7 @@
 
 #define IM_INTERNAL
 
-#include "NativeSDRGraphics.h"
+#include <nativesdr/NativeSDRGraphics.h>
 
 static ImU32 BLACK = IM_COL32(0, 0, 0, 255);
 static ImU32 GRAY = IM_COL32(160, 160, 160, 255);
