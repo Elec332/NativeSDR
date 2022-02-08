@@ -118,6 +118,15 @@
 >> [BUILD_ARGS <build_arg1> <build_arg2> ...] \
 >> [FIND <find_directive>]
 >>)
+>>
+>>getRemoteLibrary(<<t>name> \
+>> FILE <zip_location> \
+>> [NO_BUILD] \
+>> [BUILD_ARGS <build_arg1> <build_arg2> ...] \
+>> [FIND <find_directive>]
+>>)
+> 
+> In case a `FILE` is defined, the provided zipped repo will be unzipped and used
 > 
 > After the remote repo is fetched, the parameters `${name}_SOURCE_DIR` and `${name}_BINARY_DIR` will be populated. \
 > If `NO_BUILD` is defined, the function will return immediately.
