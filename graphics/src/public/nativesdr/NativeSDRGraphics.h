@@ -6,6 +6,7 @@
 #define NATIVESDR_NATIVESDRGRAPHICS_H
 
 #define IMGUI_DISABLE_INCLUDE_IMCONFIG_H
+#define CUSTOM_IMGUIFILEDIALOG_CONFIG <nativesdr/graphics_export.h>
 
 #include <nativesdr/graphics_export.h>
 #include <nativesdr/graphics/imgui.h>
@@ -17,12 +18,15 @@
 #include <nativesdr/graphics/implot.h>
 #include <nativesdr/imgui/imgui_math.h>
 #include <functional>
+#include <nativesdr/graphics/ImGuiFileDialog.h>
 
 #ifdef IM_INTERNAL
 
 #include <nativesdr/graphics/imgui_internal.h>
 
 #endif
+
+class SubContext;
 
 class GRAPHICS_EXPORT NativeGraphics {
 
@@ -44,6 +48,8 @@ public:
         }
     }
 
+    static std::shared_ptr<SubContext> createChildContext();
+
     static void destroy();
 
     static ImVec4* getClearColor();
@@ -55,6 +61,14 @@ private:
     static void startRender();
 
     static void endRender();
+
+};
+
+class GRAPHICS_EXPORT SubContext {
+
+public:
+
+    virtual void runFrame(const std::function<void()>& func) = 0;
 
 };
 
@@ -81,6 +95,8 @@ namespace ImGui {
     inline void DebugGreenBox() {
         FillBox(IM_COL32(0, 255, 0, 128));
     }
+
+    GRAPHICS_EXPORT const char* GetRendererName();
 
 #ifdef IM_INTERNAL
 

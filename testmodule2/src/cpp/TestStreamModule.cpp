@@ -10,6 +10,7 @@
 #include <nativesdr/dsp/windows.h>
 #include <nativesdr/util/chart_helper.h>
 #include "../../../core/src/headers/util/wav_reader.h"
+#include <filesystem>
 
 class FFTTestBlock : public pipeline::threaded_block {
 
@@ -154,34 +155,13 @@ private:
 
 class FileStreamTestBlock : public pipeline::threaded_block {
 
-    //std::string fileName = "D:/Downloads/15-29-07_92783258Hz.wav";
-//    std::string fileName = "D:/Downloads/ecars_net_7255_HDSDR_20180225_174354Z_7255kHz_RF.wav";
-    std::string fileName = "E:\\SDR\\Data\\IQ\\2020_03_17\\Ilyama\\445057332_1.wav";
-
 public:
 
     FileStreamTestBlock() : pipeline::threaded_block("File Block", ImColor(255, 0, 0)) {
         sampleData = dsp::malloc<utils::sampleData>(1);
         stream = pipeline::createStream<utils::complex>();
         stream->auxData = sampleData;
-        fopen_s(&file, fileName.c_str(), "rb");
-        data = readWAV(file);
-        startPos = ftell(file);
         buf = dsp::malloc<int16_t>(pipeline::BUFFER_COUNT * 2);
-        converter = dsp::getConverter(data->sampleData.bitsPerSample, data->sampleData.bitsPerSample != 8, data->sampleData.blockAlign);
-
-        std::cout << "Center freq: " << data->centerFreq << std::endl;
-        std::cout << "Length: " << data->length << std::endl;
-
-        std::cout << "A Format: " << data->sampleData.AudioFormat << std::endl;
-        std::cout << "Channels: " << data->sampleData.NumOfChan << std::endl;
-        std::cout << "Samples Sec: " << data->sampleData.SamplesPerSec << std::endl;
-        std::cout << "bpSample: " << data->sampleData.bitsPerSample << std::endl;
-        std::cout << "allign: " << data->sampleData.blockAlign << std::endl;
-        std::cout << "byperSample: " << data->sampleData.bytesPerSec << std::endl;
-        sampleData->bandwidth = data->sampleData.SamplesPerSec;
-        sampleData->sampleRate = data->sampleData.SamplesPerSec;
-        sampleData->centerFreq = data->centerFreq;
 
         addOutput("IQ out", utils::complexStreamType(), stream, true);
     }
@@ -189,12 +169,69 @@ public:
     ~FileStreamTestBlock() {
         pipeline::deleteStream(stream);
         dsp::free(sampleData);
-        fclose(file);
-        data.reset();
         dsp::free(buf);
+        if (file) {
+            fclose(file);
+        }
+    }
+
+    void openFile() {
+        if (file) {
+            fclose(file);
+        }
+        fopen_s(&file, fileName.c_str(), "rb");
+        data = readWAV(file);
+        startPos = ftell(file);
+        if (data->sampleData.NumOfChan != 2) {
+            error = true;
+            fclose(file);
+            data = nullptr;
+            return;
+        }
+        converter = dsp::getConverter(data->sampleData.bitsPerSample, data->sampleData.bitsPerSample != 8, data->sampleData.blockAlign);
+        bitDepth = data->sampleData.bitsPerSample;
+        sampleData->bandwidth = data->sampleData.SamplesPerSec;
+        sampleData->sampleRate = data->sampleData.SamplesPerSec;
+        sampleData->centerFreq = data->centerFreq;
+    }
+
+    bool hasMenu() override {
+        return true;
+    }
+
+    void drawMenu() override {
+        if (ImGui::Button("Select file")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".wav", fileDir);
+        }
+        ImGui::Text("File: %s", std::filesystem::path(fileName).filename().string().c_str());
+        ImGui::TextUnformatted("");
+        ImGui::Text("SampleRate: %u sps", sampleData->sampleRate);
+        ImGui::Text("Depth: %hu bits", bitDepth);
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                fileDir = ImGuiFileDialog::Instance()->GetCurrentPath();
+                fileName = ImGuiFileDialog::Instance()->GetFilePathName();
+                openFile();
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+    }
+
+    void drawDialogs() override {
+        if (ImGui::BeginPopupModal("Wav Error", &error, ImGuiWindowFlags_NoScrollbar)) {
+            ImGui::Text("Invalid or corrupted WAV-file!:\n %s", fileName.c_str());
+            ImGui::EndPopup();
+        }
+        if (error) {
+            ImGui::OpenPopup("Wav Error");
+        }
     }
 
     void loop() override {
+        if (!data) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            return;
+        }
         int samples = 1024 * 128;
         int elementSize = sizeof(int16_t) * 2;
         stream->write([&](utils::complex* dat) {
@@ -221,18 +258,42 @@ public:
     }
 
     void drawMiddle() override {
-        std::string str = "File: " + fileName;
-        ImGui::TextUnformatted(str.c_str());
+        if (data) {
+            std::string str = "File: " + fileName;
+            ImGui::TextUnformatted(str.c_str());
+        }
+    }
+
+    void readJson(const nlohmann::json& json) override {
+        fileName = json["file"].get<std::string>();
+        fileDir = json["dir"].get<std::string>();
+        bool restart = !hasStopped();
+        if (restart) {
+            stop();
+        }
+        openFile();
+        if (restart) {
+            start();
+        }
+    }
+
+    void toJson(nlohmann::json& json) const override {
+        json["file"] = fileName;
+        json["dir"] = fileDir;
     }
 
 private:
+
+    bool error = false;
+    std::string fileName, fileDir = ".";
+    uint16_t bitDepth = 0;
 
     pipeline::datastream<utils::complex>* stream;
     utils::sampleData* sampleData;
     FILE* file = nullptr; //Shut up clang...
     long startPos = 0;
     std::shared_ptr<file_data> data;
-    dsp::IQConverter converter;
+    dsp::IQConverter converter = nullptr;
 
     int16_t* buf;
 

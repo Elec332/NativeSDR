@@ -73,6 +73,7 @@ void sdr_ui::draw(pipeline::schematic* nodes) {
         });
         if (ImGui::CollapsingHeader("Debug")) {
             ImGui::Text("FPS: %.3f", ImGui::GetIO().Framerate);
+            ImGui::Text("Renderer: %s", ImGui::GetRendererName());
         }
         ImGui::EndChild();
         ImGui::SameLine();

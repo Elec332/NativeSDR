@@ -3,7 +3,7 @@
 //
 
 #include <ui/main_window.h>
-#include <nativesdr/NativeSDRGraphics.h>
+#include <nativesdr/core_context.h>
 
 #define FREQUENCY_NUMBERS 12
 
@@ -16,6 +16,7 @@ uint8_t drawer[FREQUENCY_NUMBERS];
 ImFont* big;
 
 pipeline::connection_callback callback = nullptr;
+std::shared_ptr<SubContext> ctx;
 
 void runCallBack() {
     oldFrequency = frequency;
@@ -136,6 +137,9 @@ void drawmain(pipeline::schematic** nm) {
 
     ImGui::PushID("top_row");
     drawTopRow(*nm);
+    (*nm)->forEachBlock([&](const pipeline::block_data& w) {
+        w->getBlock()->drawDialogs();
+    });
     ImGui::PopID();
 
     ImGui::BeginChild("Main");
@@ -149,9 +153,14 @@ void drawmain(pipeline::schematic** nm) {
     ImGui::End();
 }
 
+std::shared_ptr<SubContext> getSubContext() {
+    return ctx;
+}
+
 void main_window::init() {
     NativeGraphics::setupGraphics();
     big = ImGui::AddDefaultFont(32);
+    ctx = NativeGraphics::createChildContext();
 }
 
 void main_window::deinit() {

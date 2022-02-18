@@ -143,6 +143,7 @@
 >> [PUBLIC_HEADER_FILES <name_or_regex1> <name_or_regex1> ...] \
 >> [PRIVATE_HEADER_FILES <name_or_regex1> <name_or_regex1> ...] \
 >> [SOURCE_FILES <name_or_regex1> <name_or_regex1> ...] \
+>> [REPLACE "old1|new1" "old2|new2" ...] \
 >> [CLOSED] \
 >>)
 > 

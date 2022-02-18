@@ -12,6 +12,7 @@
 #include "backends/imgui_impl_opengl3.h"
 #include <cstdio>
 #include <vector>
+#include <mutex>
 
 static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -20,6 +21,8 @@ static void glfw_error_callback(int error, const char* description) {
 GLFWwindow* window_GLFW;
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 ImFont* defaultFont;
+GLuint uploadBuffer = -1;
+std::string renderer = "Uninitialized";
 
 int NativeGraphics::setupGraphics() {
     glfwSetErrorCallback(glfw_error_callback);
@@ -37,8 +40,8 @@ int NativeGraphics::setupGraphics() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
 #else
     // GL 3.3 + GLSL 330
-    const char* glsl_version = "#version 330";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    const char* glsl_version = "#version 430";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
@@ -61,13 +64,15 @@ int NativeGraphics::setupGraphics() {
     ImPlot::CreateContext();
     ImPlot::SetImGuiContext(ImGui::GetCurrentContext());
     ImGuiIO& io = ImGui::GetIO();
-    (void) io;
     defaultFont = io.Fonts->AddFontDefault();
 
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window_GLFW, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+
+    glGenBuffers(1, &uploadBuffer);
+    renderer = (char*) glGetString(GL_RENDERER);
 
     return 0;
 }
@@ -103,6 +108,7 @@ void NativeGraphics::destroy() {
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
+    glDeleteBuffers(1, &uploadBuffer);
 
     glfwDestroyWindow(window_GLFW);
     glfwTerminate();
@@ -112,11 +118,43 @@ ImVec4* NativeGraphics::getClearColor() {
     return &clear_color;
 }
 
+class GLSubContext : public SubContext {
+
+public:
+
+    GLSubContext() {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+        context = glfwCreateWindow(1280, 720, "", nullptr, window_GLFW);
+    }
+
+    ~GLSubContext() {
+        glfwDestroyWindow(context);
+    }
+
+    void runFrame(const std::function<void()>& func) override {
+        std::unique_lock<std::mutex> raii(windowOwner);
+        glfwMakeContextCurrent(context);
+        func();
+        glfwMakeContextCurrent(nullptr);
+    }
+
+private:
+
+    GLFWwindow* context;
+    std::mutex windowOwner;
+
+};
+
+std::shared_ptr<SubContext> NativeGraphics::createChildContext() {
+    return std::make_shared<GLSubContext>();
+}
+
 void ImGui::FocusCurrentWindow() {
     ImGui::FocusWindow(ImGui::GetCurrentWindow());
 }
-
-//
 
 #define STB_IMAGE_IMPLEMENTATION
 extern "C" {
@@ -130,6 +168,7 @@ struct TexInfo {
 };
 
 static std::vector<TexInfo> g_Textures;
+static int maxWidth = 0, maxHeight = 0;
 
 static std::vector<TexInfo>::iterator findTexture(ImTextureID texture) {
     auto textureID = static_cast<GLuint>(reinterpret_cast<std::intptr_t>(texture));
@@ -138,25 +177,50 @@ static std::vector<TexInfo>::iterator findTexture(ImTextureID texture) {
     });
 }
 
-void UpdateTexture(TexInfo& texture, const void* data, int width, int height) {
+void checkUploadBuffer(int width, int height) {
+    if (uploadBuffer < 0) {
+        throw std::runtime_error("OpenGL has not yet been initialized.");
+    }
+    if (width > maxWidth || height > maxHeight) {
+        maxWidth = std::max(width, maxWidth);
+        maxHeight = std::max(height, maxHeight);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, uploadBuffer);
+        glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, (GLsizeiptr) (maxWidth * maxHeight * 4 * sizeof(uint8_t)), nullptr, GL_STREAM_DRAW);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    }
+}
+
+void UpdateTextureSize(TexInfo& texture, int width, int height) {
     glBindTexture(GL_TEXTURE_2D, texture.texID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     texture.width = width;
     texture.height = height;
 }
 
+void UpdateTexture(TexInfo& texture, const void* data, int width, int height) {
+    if (texture.width != width || texture.height != height) {
+        checkUploadBuffer(width, height);
+        UpdateTextureSize(texture, width, height);
+    }
+//    glBindTexture(GL_TEXTURE_2D, texture.texID);
+//    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, uploadBuffer);
+    void* ioMem = glMapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
+    memcpy(ioMem, data, width * height * 4 * sizeof(uint8_t));
+    glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB);
+    glBindTexture(GL_TEXTURE_2D, texture.texID);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+}
+
 void ImGui::UpdateTexture(ImTextureID texture, const void* data, int width, int height) {
     auto textureIt = findTexture(texture);
     if (textureIt != g_Textures.end()) {
-        if (textureIt->width == width && textureIt->height == height) {
-            glBindTexture(GL_TEXTURE_2D, textureIt->texID);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        } else {
-            UpdateTexture(*textureIt, data, width, height);
-        }
+        UpdateTexture(*textureIt, data, width, height);
     }
 }
 
@@ -256,6 +320,10 @@ ImFont* ImGui::AddDefaultFont(float size) {
 void ImGui::FillBox(ImU32 col) {
     ImVec2 start = ImGui::GetWindowPos();
     ImGui::GetWindowDrawList()->AddRectFilled(start, start + ImGui::GetWindowSize(), col);
+}
+
+const char* ImGui::GetRendererName() {
+    return renderer.c_str();
 }
 
 static void formatTag(double value, char* buf, int len, void* data) {
