@@ -179,6 +179,9 @@ public:
         if (file) {
             fclose(file);
         }
+        if (!std::filesystem::exists(fileName)) {
+            return;
+        }
         fopen_s(&file, fileName.c_str(), "rb");
         data = readWAV(file);
         startPos = ftell(file);
@@ -207,7 +210,8 @@ public:
         ImGui::TextUnformatted("");
         ImGui::Text("SampleRate: %u sps", sampleData->sampleRate);
         ImGui::Text("Depth: %hu bits", bitDepth);
-        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(500, 300))) {
             if (ImGuiFileDialog::Instance()->IsOk()) {
                 fileDir = ImGuiFileDialog::Instance()->GetCurrentPath();
                 fileName = ImGuiFileDialog::Instance()->GetFilePathName();

@@ -208,13 +208,15 @@ void UpdateTexture(TexInfo& texture, const void* data, int width, int height) {
 //    glBindTexture(GL_TEXTURE_2D, texture.texID);
 //    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, uploadBuffer);
-    void* ioMem = glMapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
-    memcpy(ioMem, data, width * height * 4 * sizeof(uint8_t));
-    glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB);
-    glBindTexture(GL_TEXTURE_2D, texture.texID);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    if (data) {
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, uploadBuffer);
+        void* ioMem = glMapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
+        memcpy(ioMem, data, width * height * 4 * sizeof(uint8_t));
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER_ARB);
+        glBindTexture(GL_TEXTURE_2D, texture.texID);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    }
 }
 
 void ImGui::UpdateTexture(ImTextureID texture, const void* data, int width, int height) {
