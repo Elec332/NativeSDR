@@ -13,7 +13,9 @@
 
 class ModuleInstance;
 
-MODULE_MARKER void initModule();
+MODULE_MARKER bool initModule();
+
+MODULE_MARKER const char* getModuleName();
 
 MODULE_MARKER void onShutdownModule();
 

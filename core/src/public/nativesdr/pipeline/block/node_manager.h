@@ -11,10 +11,13 @@
 namespace pipeline {
 
     typedef std::function<pipeline::block_ptr()> block_factory;
+    typedef std::function<pipeline::source_block_ptr()> source_block_factory;
 
     class node_manager {
 
     public:
+
+        virtual void registerSourceBlockType(std::string name, pipeline::source_block_factory factory) = 0;
 
         virtual void registerBlockType(std::string name, pipeline::block_factory factory) = 0;
 

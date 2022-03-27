@@ -13,6 +13,26 @@ namespace utils {
 
     typedef struct complex {
 
+        complex operator*(const float b) const {
+            return complex{re * b, im * b};
+        }
+
+        complex operator/(const float b) const {
+            return complex{re / b, im / b};
+        }
+
+        complex operator*(const complex& b) const {
+            return complex{(re * b.re) - (im * b.im), (im * b.re) + (re * b.im)};
+        }
+
+        complex operator+(const complex& b) const {
+            return complex{re + b.re, im + b.im};
+        }
+
+        complex operator-(const complex& b) const {
+            return complex{re - b.re, im - b.im};
+        }
+
         float re;
         float im;
 

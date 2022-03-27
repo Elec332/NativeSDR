@@ -47,7 +47,7 @@ public:
         if (ID != (p - sid)) {
             return nullptr;
         }
-        for (const auto& c: pins) {
+        for (const auto& c : pins) {
             if (c->getId() == sid) {
                 return c;
             }
@@ -72,7 +72,9 @@ private:
 };
 
 wrapped_block fromFactory(const pipeline::block_factory& factory, size_t id, const std::string& type) {
-    return std::make_shared<wbii>(factory, id, type);
+    wrapped_block ret = std::make_shared<wbii>(factory, id, type);
+    ret->getBlock()->postConstruction();
+    return ret;
 }
 
 wrapped_block fromJson(const nlohmann::json& json, pipeline::node_manager* nodeManager) {
@@ -88,6 +90,7 @@ wrapped_block fromJson(const nlohmann::json& json, pipeline::node_manager* nodeM
             ret->getBlock()->readJson(data);
         }
     }
+    ret->getBlock()->postConstruction();
     ret->x = json["x"].get<float>();
     ret->y = json["y"].get<float>();
     return ret;

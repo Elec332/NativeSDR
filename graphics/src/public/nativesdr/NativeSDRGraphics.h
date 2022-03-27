@@ -11,14 +11,15 @@
 #include <nativesdr/graphics_export.h>
 #include <nativesdr/graphics/imgui.h>
 #include <nativesdr/graphics/imgui_stdlib.h>
-#include <imgui_node_editor.h>
-#include <builders.h>
-#include <drawing.h>
-#include <widgets.h>
+#include <nativesdr/graphics/imgui_node_editor.h>
+#include <nativesdr/graphics/builders.h>
+#include <nativesdr/graphics/drawing.h>
+#include <nativesdr/graphics/widgets.h>
 #include <nativesdr/graphics/implot.h>
 #include <nativesdr/imgui/imgui_math.h>
 #include <functional>
 #include <nativesdr/graphics/ImGuiFileDialog.h>
+#include <nativesdr/NativeSDRGraphicsInfo.h>
 
 #ifdef IM_INTERNAL
 
@@ -26,33 +27,45 @@
 
 #endif
 
-class SubContext;
-
-class GRAPHICS_EXPORT NativeGraphics {
+class GRAPHICS_EXPORT NativeGraphics : public NativeGraphicsInfo {
 
 public:
 
-    static int setupGraphics();
+    int setupGraphics();
 
     template<class func, class... args>
-    static void drawScreen(func&& f, args&& ... a) {
+    void drawScreen(func&& f, args&& ... a) {
         startRender();
         f(a...);
         endRender();
     }
 
     template<class func, class... args>
-    static void startMainWindow(func&& f, args&& ... a) {
+    void startMainWindow(func&& f, args&& ... a) {
         while (!shouldCloseWindow()) {
             drawScreen(f, a...);
         }
     }
 
-    static std::shared_ptr<SubContext> createChildContext();
+    std::shared_ptr<SubContext> createChildContext();
 
-    static void destroy();
+    void destroy();
 
-    static ImVec4* getClearColor();
+    ImVec4* getClearColor();
+
+    [[nodiscard]] std::string getAPI() const override;
+
+    [[nodiscard]] int getMajorVersion() const override;
+
+    [[nodiscard]] int getMinorVersion() const override;
+
+    [[nodiscard]] const std::set<std::string> getExtensions() const override;
+
+    [[nodiscard]] bool hasExtension(const std::string& name) const override;
+
+    [[nodiscard]] const std::set<std::string> getShaderVersions() const override;
+
+    [[nodiscard]] bool hasShaderVersion(const std::string& version) const override;
 
 private:
 
@@ -61,14 +74,6 @@ private:
     static void startRender();
 
     static void endRender();
-
-};
-
-class GRAPHICS_EXPORT SubContext {
-
-public:
-
-    virtual void runFrame(const std::function<void()>& func) = 0;
 
 };
 
@@ -97,6 +102,8 @@ namespace ImGui {
     }
 
     GRAPHICS_EXPORT const char* GetRendererName();
+
+    GRAPHICS_EXPORT bool Combo(const char* label, int* current_item, const std::vector<std::string>& options);
 
 #ifdef IM_INTERNAL
 

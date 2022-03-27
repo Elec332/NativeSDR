@@ -61,6 +61,9 @@ namespace pipeline {
             return name_;
         };
 
+        virtual void postConstruction() {
+        }
+
         virtual void start() = 0;
 
         virtual void stop() = 0;
@@ -136,6 +139,31 @@ namespace pipeline {
     };
 
     typedef std::shared_ptr<block> block_ptr;
+
+    class source_block : public pipeline::block {
+
+    public:
+
+        source_block(std::string name, ImColor color) : pipeline::block(std::move(name), color) {
+        }
+
+        virtual void setFrequency(uint64_t frequency) = 0;
+
+        virtual uint64_t getFrequency() = 0;
+
+        virtual void setSampleRate(uint32_t sampleRate) = 0;
+
+        virtual uint32_t getSampleRate() = 0;
+
+        virtual uint32_t getBandwidth() = 0;
+
+        virtual void setGain(int gain) = 0;
+
+        virtual int getGain() = 0;
+
+    };
+
+    typedef std::shared_ptr<source_block> source_block_ptr;
 
 }
 

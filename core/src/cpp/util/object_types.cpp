@@ -15,7 +15,7 @@ class stream_type : public simple_type<pipeline::datastream<T>> {
 
 public:
 
-    stream_type(std::string name, void(* drawer)(bool)) noexcept: simple_type<pipeline::datastream<T>>(std::move(name), drawer) {
+    stream_type(std::string name, void(* drawer)(bool)) noexcept : simple_type<pipeline::datastream<T>>(std::move(name), drawer) {
     }
 
     void setConnectionCount(void* ref, size_t count) const override {

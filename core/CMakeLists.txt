@@ -6,10 +6,12 @@ addProject(LIB SHARED)
 installRuntime(DEV)
 setCentralOutput()
 
-findLibrary(fftw3f NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)
-findLibrary(libusb-1.0 FIND_HEADER libusb-1.0/libusb.h HEADER_DIR libusb-1.0 REQUIRED)
+setRunPath($ORIGIN)
 
-findLibrary(Volk COMPONENTS volk QUIET)
+#findLibrary(fftw3f NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)
+findLibrary(fftw3f ALT FFTW3 NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)
+
+findLibrary(Volk COMPONENTS volk QUIET NO_MODULE)
 if(NOT TARGET Volk::volk)
     findPython()
     ensurePythonModule("mako >= 0.4.2" mako "mako.__version__ >= '0.4.2'")
@@ -21,12 +23,17 @@ includeDirectory(${json_SOURCE_DIR}/single_include PUBLIC)
 
 useLibraries(ModuleManager PUBLIC STATIC_HEADERS)
 useLibraries(NativeSDR::graphics PRIVATE)
-useLibraries(NAMES FFTW3::fftw3f libusb-1.0 PRIVATE WIN_INSTALL /)
+useLibraries(FFTW3::fftw3f PRIVATE WIN_INSTALL /)
 useLibraries(Volk::volk PUBLIC WIN_INSTALL / HEADER_INCLUDE_DIRS volk)
 
 if(WIN32 AND NOT MSVC)
     findLibrary(orc-0.4 FILE orc-0.4-0)
     useLibraries(orc-0.4 PRIVATE WIN_INSTALL /)
+endif()
+
+if(WIN32)
+    findLibrary(zlib FIND_HEADER zlib.h FILE zlib1 NO_MODULE REQUIRED)
+    useLibraries(zlib PRIVATE WIN_INSTALL /)
 endif()
 
 addTest()

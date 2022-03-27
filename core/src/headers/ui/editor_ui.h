@@ -7,7 +7,9 @@
 
 #include <nativesdr/pipeline/block/schematic.h>
 
-namespace editor_ui {
+class editor_ui {
+
+public:
 
     void init(const std::string& rootDir);
 
@@ -15,6 +17,12 @@ namespace editor_ui {
 
     void deinit();
 
-}
+private:
+
+
+    ImTextureID background = nullptr;
+    bool showPinId = false;
+
+};
 
 #endif //NATIVESDR_EDITOR_UI_H

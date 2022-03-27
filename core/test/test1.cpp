@@ -5,10 +5,16 @@
 #include "nativesdr/core.h"
 #include "gtest/gtest.h"
 
-TEST(example, sum_zero) {
-    ASSERT_EQ(0, testerrr());
+TEST(example, sum_zero
+) {
+ASSERT_EQ(0,
+
+testerrr()
+
+);
 }
 
-TEST(example, sum_five) {
-    ASSERT_EQ(14, 15);
+TEST(example, sum_five
+) {
+ASSERT_EQ(14, 15);
 }

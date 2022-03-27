@@ -4,7 +4,7 @@
 
 #include <utility>
 
-#include "subinit.h"
+#include <subinit.h>
 
 class SubDrawer : public pipeline::block {
 
@@ -202,7 +202,12 @@ pipeline::block_ptr createNumberBlock() {
     return std::make_shared<NumberBlock>();
 }
 
-void register_ui_components(pipeline::node_manager* nodeManager) {
+void register_ui_components(pipeline::node_manager* nodeManager, main_window* window) {
+    nodeManager->registerBlockType("UI", sdr_ui::createUIBlock);
+    nodeManager->registerBlockType("Frequency Chooser", [window]() {
+        return window->createFrequencyBlock();
+    });
+
     nodeManager->registerBlockType("Horizontal Splitter", createHSBlock);
     nodeManager->registerBlockType("Vertical Splitter", createVSBlock);
     nodeManager->registerBlockType("Number", createNumberBlock);

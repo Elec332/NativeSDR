@@ -8,6 +8,16 @@
 #include <string>
 #include <functional>
 #include <list>
+#include <set>
+#include <stdexcept>
+
+#if defined(_FILESYSTEM_) || defined(_GLIBCXX_FILESYSTEM)
+#define LL_FILESYSTEM
+#endif
+
+#ifndef LL_EXPORT
+#define LL_EXPORT
+#endif
 
 namespace libloader {
 
@@ -17,21 +27,28 @@ namespace libloader {
         }
     };
 
-    class library {
+    class LL_EXPORT library {
 
     public:
+
+#ifdef LL_FILESYSTEM
+
+        explicit library(std::filesystem::path path) : library(path.string()) {
+        }
+
+#endif
 
         explicit library(const std::string& path);
 
         ~library();
 
-        library(const library&) = delete; //No copies allowed
+        library(const libloader::library& a) = delete; //No copies allowed
 
-        library& operator=(const library&) = delete; //No copies allowed
+        library& operator=(const libloader::library& a) = delete; //No copies allowed
 
-        library(library&& other) noexcept;
+        library(libloader::library&& other) noexcept;
 
-        library& operator=(library&& other) noexcept;
+        library& operator=(libloader::library&& other) noexcept;
 
         [[nodiscard]] bool isLoaded() const;
 
@@ -74,15 +91,23 @@ namespace libloader {
 
     };
 
-    void loadFolder(std::list<libloader::library>& list, const std::string& path);
+    LL_EXPORT void loadFolder(std::list<libloader::library>& list, const std::function<bool(libloader::library&)>& consumer, const std::string& path);
 
-    std::list<libloader::library> loadFolder(const std::string& path);
+    LL_EXPORT void loadFolder(std::list<libloader::library>& list, const std::string& path);
 
-#if defined(_FILESYSTEM_) || defined(_GLIBCXX_FILESYSTEM)
+    LL_EXPORT std::list<libloader::library> loadFolder(const std::string& path);
 
-    void loadFolder(std::list<libloader::library>& list, const std::filesystem::path& path);
+    LL_EXPORT libloader::library createFakeLibrary(const std::string& path);
 
-    std::list<libloader::library> loadFolder(const std::filesystem::path& path);
+    LL_EXPORT std::set<std::string> getLoadedLibraries();
+
+#ifdef LL_FILESYSTEM
+
+    LL_EXPORT void loadFolder(std::list<libloader::library>& list, const std::function<bool(libloader::library&)>& consumer, const std::filesystem::path& path);
+
+    LL_EXPORT void loadFolder(std::list<libloader::library>& list, const std::filesystem::path& path);
+
+    LL_EXPORT std::list<libloader::library> loadFolder(const std::filesystem::path& path);
 
 #endif
 

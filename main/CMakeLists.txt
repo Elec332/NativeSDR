@@ -3,7 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 project(main)
 
 addProject(EXECUTABLE)
-installRuntime(DEV)
+installRuntime(DEV DESTINATION ${CMAKE_INSTALL_PREFIX})
 setCentralOutput()
+
+setRunPath($ORIGIN/lib)
 
 useLibraries(NativeSDR::core PRIVATE)

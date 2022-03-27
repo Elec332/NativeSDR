@@ -4,7 +4,7 @@
 
 #define IM_INTERNAL
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <nativesdr/NativeSDRGraphics.h>
 
@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <vector>
 #include <mutex>
+#include <iostream>
 
 static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -23,6 +24,9 @@ ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 ImFont* defaultFont;
 GLuint uploadBuffer = -1;
 std::string renderer = "Uninitialized";
+std::string api = "Uninitialized";
+int majorV, minorV;
+std::set<std::string> extensions, shaders;
 
 int NativeGraphics::setupGraphics() {
     glfwSetErrorCallback(glfw_error_callback);
@@ -40,8 +44,8 @@ int NativeGraphics::setupGraphics() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
 #else
     // GL 3.3 + GLSL 330
-    const char* glsl_version = "#version 430";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    const char* glsl_version = "#version 330";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
@@ -72,7 +76,27 @@ int NativeGraphics::setupGraphics() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     glGenBuffers(1, &uploadBuffer);
+
     renderer = (char*) glGetString(GL_RENDERER);
+    glGetIntegerv(GL_MAJOR_VERSION, &majorV);
+    glGetIntegerv(GL_MINOR_VERSION, &minorV);
+    api = "OpenGL | ";
+    api += (char*) glGetString(GL_VENDOR);
+    int r;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &r);
+    for (int i = 0; i < r; ++i) {
+        auto s = (char*) glGetStringi(GL_EXTENSIONS, i);
+        if (s) {
+            extensions.insert(s);
+        }
+    }
+    glGetIntegerv(GL_NUM_SHADING_LANGUAGE_VERSIONS, &r);
+    for (int i = 0; i < r; ++i) {
+        auto s = (char*) glGetStringi(GL_SHADING_LANGUAGE_VERSION, i);
+        if (s) {
+            extensions.insert(s);
+        }
+    }
 
     return 0;
 }
@@ -150,6 +174,34 @@ private:
 
 std::shared_ptr<SubContext> NativeGraphics::createChildContext() {
     return std::make_shared<GLSubContext>();
+}
+
+std::string NativeGraphics::getAPI() const {
+    return api;
+}
+
+int NativeGraphics::getMajorVersion() const {
+    return majorV;
+}
+
+int NativeGraphics::getMinorVersion() const {
+    return minorV;
+}
+
+const std::set<std::string> NativeGraphics::getExtensions() const {
+    return extensions;
+}
+
+bool NativeGraphics::hasExtension(const std::string& name) const {
+    return extensions.find(name) != extensions.end();
+}
+
+const std::set<std::string> NativeGraphics::getShaderVersions() const {
+    return shaders;
+}
+
+bool NativeGraphics::hasShaderVersion(const std::string& version) const {
+    return shaders.find(version) != shaders.end();
 }
 
 void ImGui::FocusCurrentWindow() {
@@ -326,6 +378,15 @@ void ImGui::FillBox(ImU32 col) {
 
 const char* ImGui::GetRendererName() {
     return renderer.c_str();
+}
+
+static bool getName(void* data, int idx, const char** name) {
+    *name = (*((std::vector<std::string>*) data))[idx].c_str();
+    return true;
+}
+
+bool ImGui::Combo(const char* label, int* current_item, const std::vector<std::string>& options) {
+    return ImGui::Combo(label, current_item, getName, (void*) &options, (int) options.size());
 }
 
 static void formatTag(double value, char* buf, int len, void* data) {

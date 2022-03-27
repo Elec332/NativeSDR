@@ -7,6 +7,7 @@
 
 #include <nativesdr/core_export.h>
 #include <nativesdr/util/types.h>
+#include <cstddef>
 
 namespace dsp {
 

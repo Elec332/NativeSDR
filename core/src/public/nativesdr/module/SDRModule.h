@@ -8,14 +8,13 @@
 #include <module/module.h>
 #include <string>
 #include <nativesdr/pipeline/block/node_manager.h>
+#include <nativesdr/core_context.h>
 
 class ModuleInstance {
 
 public:
 
-    [[nodiscard]] virtual std::string getName() const = 0;
-
-    virtual void init(pipeline::node_manager* nodeManager) = 0;
+    virtual void init(pipeline::node_manager* nodeManager, const SDRCoreContext* context) = 0;
 
 };
 

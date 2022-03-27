@@ -6,9 +6,6 @@
 #include <iostream>
 #include "ui/sdr_ui.h"
 
-bool showMenu = true;
-float size = 0.2;
-
 void sdr_ui::init() {
 }
 
@@ -50,7 +47,7 @@ pipeline::block_ptr sdr_ui::createUIBlock() {
     return std::make_shared<UIBlock>();
 }
 
-void sdr_ui::draw(pipeline::schematic* nodes) {
+void sdr_ui::draw(pipeline::schematic* nodes, NativeGraphics& context) {
     //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
     ImVec2 totalSize = ImGui::GetWindowSize();
     auto leftPaneWidth = totalSize.x * size;
@@ -74,6 +71,8 @@ void sdr_ui::draw(pipeline::schematic* nodes) {
         if (ImGui::CollapsingHeader("Debug")) {
             ImGui::Text("FPS: %.3f", ImGui::GetIO().Framerate);
             ImGui::Text("Renderer: %s", ImGui::GetRendererName());
+            ImGui::Text("Backend: %s", context.getAPI().c_str());
+            ImGui::Text("Version: %d.%d", context.getMajorVersion(), context.getMinorVersion());
         }
         ImGui::EndChild();
         ImGui::SameLine();

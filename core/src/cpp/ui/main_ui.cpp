@@ -5,30 +5,17 @@
 #include <ui/main_window.h>
 #include <nativesdr/core_context.h>
 
-#define FREQUENCY_NUMBERS 12
-
-bool showEditor = false;
-uint64_t oldFrequency = 0;
-//uint64_t frequency = 99109674;
-uint64_t frequency = 95300000;
-uint64_t* freqRef = &frequency;
-uint8_t drawer[FREQUENCY_NUMBERS];
-ImFont* big;
-
-pipeline::connection_callback callback = nullptr;
-std::shared_ptr<SubContext> ctx;
-
-void runCallBack() {
+void main_window::runCallBack() {
     oldFrequency = frequency;
     if (callback) {
         callback(1);
     }
 }
 
-void checkFrequency() {
+void main_window::checkFrequency() {
     if (frequency != oldFrequency) {
         uint32_t temp = frequency;
-        for (uint8_t& i: drawer) {
+        for (uint8_t& i : drawer) {
             i = temp % 10;
             temp -= i;
             temp /= 10;
@@ -37,7 +24,7 @@ void checkFrequency() {
     }
 }
 
-void drawFreqChooser() {
+void main_window::drawFreqChooser() {
     checkFrequency();
     ImGui::PushFont(big);
     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -110,7 +97,7 @@ void drawFreqChooser() {
     ImGui::PopFont();
 }
 
-void drawTopRow(pipeline::schematic* nm) {
+void main_window::drawTopRow(pipeline::schematic* nm) {
     if (ImGui::Button(showEditor ? "Show Interface" : "Show Editor", ImVec2(100, 30))) {
         showEditor = !showEditor;
     }
@@ -126,7 +113,7 @@ void drawTopRow(pipeline::schematic* nm) {
     drawFreqChooser();
 }
 
-void drawmain(pipeline::schematic** nm) {
+void main_window::drawWindow(pipeline::schematic** nm) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGuiIO& io = ImGui::GetIO();
     ImGui::SetNextWindowSize(io.DisplaySize);
@@ -144,39 +131,29 @@ void drawmain(pipeline::schematic** nm) {
 
     ImGui::BeginChild("Main");
     if (showEditor) {
-        editor_ui::draw(*nm);
+        editor.draw(*nm);
     } else {
-        sdr_ui::draw(*nm);
+        sdr.draw(*nm, context);
     }
     ImGui::EndChild();
 
     ImGui::End();
 }
 
-std::shared_ptr<SubContext> getSubContext() {
+void drawmain(pipeline::schematic** nm, main_window* window) {
+    window->drawWindow(nm);
+}
+
+std::shared_ptr<SubContext> main_window::getSubContext() {
     return ctx;
-}
-
-void main_window::init() {
-    NativeGraphics::setupGraphics();
-    big = ImGui::AddDefaultFont(32);
-    ctx = NativeGraphics::createChildContext();
-}
-
-void main_window::deinit() {
-    NativeGraphics::destroy();
-}
-
-void main_window::start(pipeline::schematic** nodes) {
-    NativeGraphics::startMainWindow(drawmain, nodes);
 }
 
 class FreqBlock : public pipeline::block {
 
 public:
 
-    explicit FreqBlock(uint64_t*& freq) : pipeline::block("Frequency Chooser", ImColor(255, 255, 0)) {
-        callback = addOutput("Frequency", utils::frequencyType(), freq, true);
+    explicit FreqBlock(uint64_t*& freq, main_window* window) : pipeline::block("Frequency Chooser", ImColor(255, 255, 0)) {
+        window->callback = addOutput("Frequency", utils::frequencyType(), freq, true);
     }
 
     void start() override {
@@ -190,8 +167,30 @@ public:
 
 };
 
-pipeline::block_ptr mainFB = std::make_shared<FreqBlock>(freqRef);
+
+void main_window::init(const std::string& rootDir) {
+    mainFB = std::make_shared<FreqBlock>(freqRef, this);
+    context.setupGraphics();
+    big = ImGui::AddDefaultFont(32);
+    ctx = context.createChildContext();
+    sdr.init();
+    editor.init(rootDir);
+}
+
+void main_window::deInit() {
+    sdr.deinit();
+    editor.deinit();
+    context.destroy();
+}
+
+void main_window::start(pipeline::schematic** nodes) {
+    context.startMainWindow(drawmain, nodes, this);
+}
 
 pipeline::block_ptr main_window::createFrequencyBlock() {
     return mainFB;
+}
+
+NativeGraphics* main_window::getBackend() {
+    return &context;
 }

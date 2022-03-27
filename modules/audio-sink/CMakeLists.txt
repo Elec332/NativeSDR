@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.21)
+set(CMAKE_CXX_STANDARD 17)
+project(NativeSDR_audio-sink)
+
+addModule()
+#find_package(portaudio REQUIRED)
+findLibrary(portaudio-2.0 ALT portaudio)
+if(WIN32)
+    useLibraries(portaudio PRIVATE WIN_INSTALL ${MODULE_DIR})
+else()
+    useLibraries(portaudio-2.0 PRIVATE)
+endif()

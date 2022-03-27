@@ -8,6 +8,11 @@ class node_manager_impl : public pipeline::node_manager {
 
 public:
 
+    void registerSourceBlockType(std::string name, pipeline::source_block_factory factory) override {
+        std::cout << "Registered source!" << std::endl;
+        registerBlockType(name, (pipeline::block_factory) factory);
+    }
+
     void registerBlockType(std::string name, pipeline::block_factory factory) override {
         factories[name] = factory;
     }
@@ -17,7 +22,7 @@ public:
     }
 
     void forEachFactory(const std::function<void(const std::string&)>& func) override {
-        for (auto& f: factories) {
+        for (auto& f : factories) {
             func(f.first);
         }
     }

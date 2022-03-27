@@ -8,10 +8,6 @@
 namespace ne = ax::NodeEditor;
 namespace util = ax::NodeEditor::Utilities;
 
-static ImTextureID background = nullptr;
-
-static bool showPinId = false;
-
 void editor_ui::init(const std::string& rootDir) {
     background = ImGui::LoadTexture((rootDir + "/assets/BlueprintBackground.png").c_str());
 }
@@ -40,7 +36,7 @@ void editor_ui::draw(pipeline::schematic* nodes) {
         ImGui::Spring(0);
         builder.EndHeader();
 
-        for (auto& input: rb->getInputs()) {
+        for (auto& input : rb->getInputs()) {
             builder.Input(id + input->getId());
             input->getType()->drawIcon(false);
             ImGui::Spring(0);
@@ -59,7 +55,7 @@ void editor_ui::draw(pipeline::schematic* nodes) {
 //        ImGui::TextUnformatted(("Hatseflats " + std::to_string(id)).c_str());
 //        ImGui::Spring(1, 0);
 
-        for (auto& output: rb->getOutputs()) {
+        for (auto& output : rb->getOutputs()) {
             builder.Output(id + output->getId());
             ImGui::Spring(0);
             std::string pin = output->getName();

@@ -13,9 +13,13 @@ class ModuleContainer {
 
 public:
 
-    virtual void initModule() = 0;
+    virtual void shutdownOnDestruct() = 0;
 
-    virtual void onShutdownModule() = 0;
+    virtual bool initModule() = 0;
+
+    virtual std::string getModuleName() = 0;
+
+    virtual void shutdownModule() = 0;
 
     virtual ModuleInstance* createModuleContainer() = 0;
 
@@ -29,6 +33,8 @@ ModulePointer getModule(const std::string& location);
 
 ModulePointer getModule(libloader::library& lib);
 
-std::list<ModulePointer> getModules(std::list<libloader::library>& libs);
+bool getModules(std::list<libloader::library>& libs, std::list<ModulePointer>& moduleList, const std::function<void(std::string duplicate)>& failCallback);
+
+bool loadModules(std::list<libloader::library>& libs, std::list<ModulePointer>& moduleList, const std::filesystem::path& path, const std::function<void(std::string duplicate)>& failCallback);
 
 #endif //NATIVESDR_MODULEMANAGER_H

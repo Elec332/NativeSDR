@@ -68,7 +68,7 @@ public:
                     std::cout << "Stopped: " + block->getType() << std::endl;
                 }));
             });
-            for (auto& a: joinPool) {
+            for (auto& a : joinPool) {
                 a.wait();
             }
             running = false;
@@ -139,7 +139,7 @@ public:
     }
 
     void save(nlohmann::json& json) const {
-        for (const auto& b: blocks) {
+        for (const auto& b : blocks) {
             ImVec2 v = ax::NodeEditor::GetNodePosition(b.first);
             b.second->x = v.x;
             b.second->y = v.y;
@@ -150,7 +150,7 @@ public:
     void load(const nlohmann::json& json) {
         ax::NodeEditor::SetCurrentEditor(getEditor());
         size_t max = 32;
-        for (const auto& element: json) {
+        for (const auto& element : json) {
             wrapped_block wb = fromJson(element, nodeManager);
             if (wb) {
                 blocks[wb->getIdInt()] = wb;
@@ -162,13 +162,13 @@ public:
     }
 
     void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) override {
-        for (const auto& b: blocks) {
+        for (const auto& b : blocks) {
             func(b.second);
         }
     }
 
     void forEachBlock(const std::string& type, const std::function<void(const pipeline::block_data&)>& func) override {
-        for (const auto& b: blocks) {
+        for (const auto& b : blocks) {
             if (b.second->getType() == type) {
                 func(b.second);
             }
@@ -326,7 +326,7 @@ public:
     }
 
     void save(nlohmann::json& json) const override {
-        for (const auto& b: links) {
+        for (const auto& b : links) {
             nlohmann::json lj;
             lj["a"] = (size_t) b.second->startPin;
             lj["b"] = (size_t) b.second->endPin;
@@ -340,7 +340,7 @@ public:
         linkCounter = LINK_COUNTER_START;
 
         ax::NodeEditor::SetCurrentEditor(schematic->getEditor());
-        for (const auto& element: json) {
+        for (const auto& element : json) {
             auto a = element["a"].get<size_t>();
             auto b = element["b"].get<size_t>();
             pipeline::block_data blockA = schematic->getBlock(a - (a % 32));
@@ -410,9 +410,9 @@ public:
     }
 
     void deleteLinks(const wrapped_block& block, const pipeline::block::connection_list& list) {
-        for (const auto& conn: list) {
+        for (const auto& conn : list) {
             size_t id = conn->getId() + block->getIdInt();
-            for (auto i: pinToLinks[id]) {
+            for (auto i : pinToLinks[id]) {
                 {
                     pipeline::link l = links[i];
                     if (l) {
@@ -445,13 +445,13 @@ public:
     }
 
     void forEachLink(const std::function<void(const pipeline::link&)>& func) override {
-        for (const auto& p: links) {
+        for (const auto& p : links) {
             func(p.second);
         }
     }
 
     void onLinkValueChanged(ax::NodeEditor::PinId pin, const block_connection* newRef, int flags) override {
-        for (const auto& l: pinToLinks[(size_t) pin]) {
+        for (const auto& l : pinToLinks[(size_t) pin]) {
             getConnection(links[l]->endPin, true)->setObject(newRef, flags);
         }
     }
