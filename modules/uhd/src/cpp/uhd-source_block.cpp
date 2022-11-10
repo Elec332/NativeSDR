@@ -34,7 +34,6 @@ class UHDSourceBlock : public pipeline::threaded_source_block {
 public:
 
     explicit UHDSourceBlock(USRPDeviceCache* cache) : pipeline::threaded_source_block("UHD Source Block", ImColor(255, 0, 0)), cache(cache) {
-        cache->refresh();
         sampleData = dsp::malloc<utils::sampleData>(1);
         stream = pipeline::createStream<utils::complex>();
         stream->auxData = sampleData;

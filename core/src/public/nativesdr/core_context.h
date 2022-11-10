@@ -18,6 +18,8 @@ public:
 
     virtual std::shared_ptr<SubContext> getGraphicsSubContext() = 0;
 
+    virtual void registerUSBChangeListener(std::function<void()>) = 0;
+
 };
 
 

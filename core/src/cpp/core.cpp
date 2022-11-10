@@ -11,8 +11,8 @@
 #include <map>
 #include <ui/main_window.h>
 #include "subinit.h"
+#include "util/usb_handler.h"
 #include <nativesdr/core_context.h>
-#include <gl/glew.h>
 
 class SDRCore : public SDRCoreContext {
 
@@ -47,6 +47,11 @@ public:
 //    fftwf_init_threads(); TODO: Check
 //    fftwf_plan_with_nthreads(4);
         fftwf_set_timelimit(0.003);
+        usbHandler = createUSBHandler();
+        int c = usbHandler->init();
+        if (c != 0) {
+            return c;
+        }
 
         window.init(exec.string());
         std::map<ModuleInstance*, ModuleContainer*> dealloc;
@@ -67,6 +72,7 @@ public:
         window.start(&schematic);
 
         window.deInit();
+        usbHandler->deInit();
         schematic->save();
         pipeline::deleteSchematic(schematic);
         deleteNodeManager(nodeManager);
@@ -89,10 +95,15 @@ public:
         return window.getBackend()->createChildContext();
     }
 
+    void registerUSBChangeListener(std::function<void()> callback) override {
+        usbHandler->registerUSBChangeListener(std::move(callback));
+    }
+
 private:
 
     main_window window;
     std::string runDir;
+    std::shared_ptr<USBHandler> usbHandler;
 
 };
 

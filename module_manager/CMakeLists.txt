@@ -6,6 +6,6 @@ addProject(LIB STATIC)
 
 if(NOT WIN32)
     target_compile_options(${PROJECT_NAME} PUBLIC -fPIC)
-elseif()
+else()
     add_compile_definitions(LL_EXPORT=__declspec\(dllexport\))
 endif()

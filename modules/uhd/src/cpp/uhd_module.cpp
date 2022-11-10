@@ -15,7 +15,7 @@ class UHDModule : public ModuleInstance, public USRPDeviceCache {
         return devs;
     }
 
-    void refresh() override {
+    void refresh() {
         uhd::device_addr_t hint;
         uhd::device_addrs_t devices = uhd::device::find(hint);
         devs.clear();
@@ -41,9 +41,11 @@ class UHDModule : public ModuleInstance, public USRPDeviceCache {
 //        }
 //    }
 
-    void init(pipeline::node_manager* nodeManager, const SDRCoreContext* context) override {
+    void init(pipeline::node_manager* nodeManager, SDRCoreContext* context) override {
         if (isUHDLoaded()) {
-            refresh();
+            context->registerUSBChangeListener([&]() {
+                refresh();
+            });
             nodeManager->registerSourceBlockType("UHD Source", [&]() {
                 return createUHDSource(this);
             });

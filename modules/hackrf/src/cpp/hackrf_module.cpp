@@ -8,7 +8,7 @@
 
 class HackRFModule : public ModuleInstance {
 
-    void init(pipeline::node_manager* nodeManager, const SDRCoreContext* context) override {
+    void init(pipeline::node_manager* nodeManager, SDRCoreContext* context) override {
         nodeManager->registerSourceBlockType("HackRF Source", createHackRFSource);
     }
 

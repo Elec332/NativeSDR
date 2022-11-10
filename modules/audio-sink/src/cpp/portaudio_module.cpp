@@ -8,7 +8,7 @@
 
 class PortAudioModule : public ModuleInstance {
 
-    void init(pipeline::node_manager* nodeManager, const SDRCoreContext* context) override {
+    void init(pipeline::node_manager* nodeManager, SDRCoreContext* context) override {
         nodeManager->registerBlockType("Audio Sink", createAudioSinkBlock);
     }
 

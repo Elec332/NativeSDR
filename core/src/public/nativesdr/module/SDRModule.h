@@ -14,7 +14,7 @@ class ModuleInstance {
 
 public:
 
-    virtual void init(pipeline::node_manager* nodeManager, const SDRCoreContext* context) = 0;
+    virtual void init(pipeline::node_manager* nodeManager, SDRCoreContext* context) = 0;
 
 };
 

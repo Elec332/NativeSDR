@@ -19,8 +19,6 @@ class UHD_MODULE_EXPORT USRPDeviceCache {
 
 public:
 
-    virtual void refresh() = 0;
-
     virtual const uhd_devices& getDevices() = 0;
 
 };

@@ -120,7 +120,7 @@ public:
 
     void drawMiddle() override {
         if (!hasStopped() && device) {
-            std::string str = "File: ";
+            std::string str = "RTL Device: ";
             str += rtlsdr_get_device_name(0);
             ImGui::TextUnformatted(str.c_str());
         }

@@ -25,6 +25,7 @@ useLibraries(ModuleManager PUBLIC STATIC_HEADERS)
 useLibraries(NativeSDR::graphics PRIVATE)
 useLibraries(FFTW3::fftw3f PRIVATE WIN_INSTALL /)
 useLibraries(Volk::volk PUBLIC WIN_INSTALL / HEADER_INCLUDE_DIRS volk)
+useLibraries(libusb-1.0 PRIVATE)
 
 if(WIN32 AND NOT MSVC)
     findLibrary(orc-0.4 FILE orc-0.4-0)
