@@ -106,6 +106,10 @@ void libloader::loadFolder(std::list<libloader::library>& libs, const std::files
     loadFolder(libs, nullptr, path);
 }
 
+static bool endsWith(const std::string& str, const std::string& suffix) {
+    return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 void libloader::loadFolder(std::list<libloader::library>& libs, const std::function<bool(libloader::library&)>& consumer, const std::filesystem::path& path) {
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
         return;
@@ -116,6 +120,9 @@ void libloader::loadFolder(std::list<libloader::library>& libs, const std::funct
             continue;
         }
         std::string name = dir_entry.path().string();
+        if (!endsWith(name, ".dll") && !endsWith(name, ".a")) {
+            goto dirLoop;
+        }
         for (const auto& l : libs) {
             if (l.getLocation() == name) {
                 goto dirLoop;

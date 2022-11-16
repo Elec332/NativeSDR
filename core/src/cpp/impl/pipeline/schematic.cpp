@@ -95,6 +95,10 @@ public:
     }
 
     void save() override {
+        save(path);
+    }
+
+    void save(const std::filesystem::path& pathS) override {
         if (loading) {
             return;
         }
@@ -102,11 +106,11 @@ public:
         nlohmann::json json;
         nlohmann::json nodes = nlohmann::json::array();
         nlohmann::json links = nlohmann::json::array();
-        save(nodes);
+        saveJson(nodes);
         linkHandler->save(links);
         json["nodes"] = nodes;
         json["links"] = links;
-        std::ofstream file(path);
+        std::ofstream file(pathS);
         file << json;
     }
 
@@ -138,7 +142,7 @@ public:
         loading = false;
     }
 
-    void save(nlohmann::json& json) const {
+    void saveJson(nlohmann::json& json) const {
         for (const auto& b : blocks) {
             ImVec2 v = ax::NodeEditor::GetNodePosition(b.first);
             b.second->x = v.x;

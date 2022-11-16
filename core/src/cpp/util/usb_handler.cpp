@@ -41,10 +41,7 @@ public:
     static int usb_hotplug_callback(struct libusb_context* ctx, struct libusb_device* dev, libusb_hotplug_event event, void* user_data) {
         std::cout << "Hotplug debug" << std::endl; //TODO: Remove
         auto instance = (LibUSBImpl*) user_data;
-        std::unique_lock<std::mutex> raii(instance->callbackLock);
-        for (auto& cb : instance->usbCallbacks) {
-            cb();
-        }
+        instance->reload();
         return 0;
     }
 

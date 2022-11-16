@@ -202,7 +202,7 @@ pipeline::block_ptr createNumberBlock() {
     return std::make_shared<NumberBlock>();
 }
 
-void register_ui_components(pipeline::node_manager* nodeManager, main_window* window) {
+void register_ui_components(pipeline::node_manager* nodeManager, const std::shared_ptr<SDRMainWindow>& window) {
     nodeManager->registerBlockType("UI", sdr_ui::createUIBlock);
     nodeManager->registerBlockType("Frequency Chooser", [window]() {
         return window->createFrequencyBlock();

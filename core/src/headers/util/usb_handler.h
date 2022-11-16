@@ -20,14 +20,23 @@ public:
         usbCallbacks.emplace_back(std::move(callback));
     }
 
+    void reload() {
+        std::unique_lock<std::mutex> raii(callbackLock);
+        for (const auto& cb : usbCallbacks) {
+            cb();
+        }
+    }
+
     virtual int deInit() = 0;
 
-    virtual ~USBHandler() {
+    void cleanup() {
         std::unique_lock<std::mutex> raii(callbackLock);
         usbCallbacks.clear();
-    };
+    }
 
-protected:
+    virtual ~USBHandler() = default;
+
+private:
 
     std::list<std::function<void()>> usbCallbacks;
     std::mutex callbackLock;

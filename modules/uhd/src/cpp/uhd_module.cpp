@@ -44,7 +44,8 @@ class UHDModule : public ModuleInstance, public USRPDeviceCache {
     void init(pipeline::node_manager* nodeManager, SDRCoreContext* context) override {
         if (isUHDLoaded()) {
             context->registerUSBChangeListener([&]() {
-                refresh();
+                std::cout << "Refresh" << std::endl;
+                //refresh();
             });
             nodeManager->registerSourceBlockType("UHD Source", [&]() {
                 return createUHDSource(this);

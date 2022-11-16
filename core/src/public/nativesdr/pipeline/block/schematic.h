@@ -28,6 +28,8 @@ namespace pipeline {
 
         virtual void save() = 0;
 
+        virtual void save(const std::filesystem::path& path) = 0;
+
         virtual void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) = 0;
 
         virtual void forEachBlock(const std::string& type, const std::function<void(const pipeline::block_data&)>& func) = 0;

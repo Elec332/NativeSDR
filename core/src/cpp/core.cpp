@@ -12,9 +12,10 @@
 #include <ui/main_window.h>
 #include "subinit.h"
 #include "util/usb_handler.h"
+#include "nativesdr/core_actions.h"
 #include <nativesdr/core_context.h>
 
-class SDRCore : public SDRCoreContext {
+class SDRCore : public SDRCoreContext, public SDRCoreActions {
 
 public:
 
@@ -53,13 +54,14 @@ public:
             return c;
         }
 
-        window.init(exec.string());
+        window = createMainWindow();
+        window->init(exec.string());
         std::map<ModuleInstance*, ModuleContainer*> dealloc;
 
         //////////////////////////////////////////////////////////////////////
 
         pipeline::node_manager* nodeManager = newNodeManager();
-        register_ui_components(nodeManager, &window);
+        register_ui_components(nodeManager, window);
         register_sdr_components(nodeManager);
         for (const auto& p : modules) {
             ModuleInstance* i = p->createModuleContainer();
@@ -67,14 +69,15 @@ public:
             i->init(nodeManager, this);
             dealloc[i] = p.get();
         }
-        pipeline::schematic* schematic = pipeline::newSchematic(nodeManager, exec / "start.json");
+        currentSchematic = pipeline::newSchematic(nodeManager, exec / "start.json");
 
-        window.start(&schematic);
+        window->start(&currentSchematic, this);
 
-        window.deInit();
+        window->deInit();
         usbHandler->deInit();
-        schematic->save();
-        pipeline::deleteSchematic(schematic);
+        usbHandler->cleanup();
+        currentSchematic->save();
+        pipeline::deleteSchematic(currentSchematic);
         deleteNodeManager(nodeManager);
         for (const auto& p : dealloc) {
             std::cout << "Unloading module: " << p.second->getModuleName() << std::endl;
@@ -88,22 +91,35 @@ public:
     }
 
     NativeGraphicsInfo* getGraphicsInfo() override {
-        return window.getBackend();
+        return window->getBackend();
     }
 
     std::shared_ptr<SubContext> getGraphicsSubContext() override {
-        return window.getBackend()->createChildContext();
+        return window->getBackend()->createChildContext();
     }
 
     void registerUSBChangeListener(std::function<void()> callback) override {
         usbHandler->registerUSBChangeListener(std::move(callback));
     }
 
+    void reloadUSBDevices() override {
+        usbHandler->reload();
+    }
+
+    void saveSchematic() override {
+        currentSchematic->save();
+    }
+
+    void saveSchematic(const std::filesystem::path &path) override {
+        currentSchematic->save(path);
+    }
+
 private:
 
-    main_window window;
+    std::shared_ptr<SDRMainWindow> window;
     std::string runDir;
     std::shared_ptr<USBHandler> usbHandler;
+    pipeline::schematic* currentSchematic;
 
 };
 

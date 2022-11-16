@@ -12,7 +12,7 @@ void init_object_types();
 
 void init_malloc();
 
-void register_ui_components(pipeline::node_manager* nodeManager, main_window* window);
+void register_ui_components(pipeline::node_manager* nodeManager, const std::shared_ptr<SDRMainWindow>& window);
 
 void register_sdr_components(pipeline::node_manager* nodeManager);
 
