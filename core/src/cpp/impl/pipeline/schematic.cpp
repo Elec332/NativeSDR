@@ -16,12 +16,10 @@
 class schematic_impl : public pipeline::schematic {
 
     static bool save(const char*, size_t, ax::NodeEditor::SaveReasonFlags reason, void* userPointer) {
-        if (((schematic_impl*) userPointer)->cfg->SaveSettings ==
-            nullptr) { //Workaround for wonky implementation, it does some weird caching...
+        if (((schematic_impl*) userPointer)->cfg->SaveSettings == nullptr) { //Workaround for wonky implementation, it does some weird caching...
             return false;
         }
-        if ((reason & ax::NodeEditor::SaveReasonFlags::Position) == ax::NodeEditor::SaveReasonFlags::Position ||
-            reason == ax::NodeEditor::SaveReasonFlags::None) {
+        if ((reason & ax::NodeEditor::SaveReasonFlags::Position) == ax::NodeEditor::SaveReasonFlags::Position || reason == ax::NodeEditor::SaveReasonFlags::None) {
             ((schematic_impl*) userPointer)->save();
             return true;
         }
@@ -103,6 +101,9 @@ public:
             return;
         }
         std::scoped_lock<std::mutex> guard(saveLock);
+        if (broken && !ignoreFlag) {
+            return;
+        }
         nlohmann::json json;
         nlohmann::json nodes = nlohmann::json::array();
         nlohmann::json links = nlohmann::json::array();
@@ -137,7 +138,7 @@ public:
         }
         nlohmann::json nodes = json["nodes"];
         nlohmann::json links = json["links"];
-        load(nodes);
+        broken = !load(nodes);
         linkHandler->load(links);
         loading = false;
     }
@@ -151,7 +152,8 @@ public:
         }
     }
 
-    void load(const nlohmann::json& json) {
+    bool load(const nlohmann::json& json) {
+        bool ret = true;
         ax::NodeEditor::SetCurrentEditor(getEditor());
         size_t max = 32;
         for (const auto& element : json) {
@@ -160,9 +162,25 @@ public:
                 blocks[wb->getIdInt()] = wb;
                 ax::NodeEditor::SetNodePosition(wb->getId(), ImVec2(wb->x, wb->y));
                 max = std::max(max, wb->getIdInt());
+            } else {
+                std::cout << "Failed to load block: " << element << std::endl;
+                ret = false;
             }
         }
         counter = max + 32;
+        return ret;
+    }
+
+    bool isBroken() override {
+        return broken;
+    }
+
+    void ignoreBroken() override {
+        ignoreFlag = true;
+    }
+
+    bool isLocked() override {
+        return broken && !ignoreFlag;
     }
 
     void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) override {
@@ -192,6 +210,9 @@ public:
     }
 
     bool addBlock(std::string name, float x, float y) override {
+        if (isLocked()) {
+            return false;
+        }
         pipeline::block_factory factory = nodeManager->getFactory(name);
         if (!factory) {
             return false;
@@ -216,6 +237,9 @@ public:
     }
 
     bool deleteBlock(ax::NodeEditor::NodeId id) override {
+        if (isLocked()) {
+            return false;
+        }
         wrapped_block b = blocks[(size_t) id];
         linkHandler->deleteBlockLinks(b); //All links _should_ already be gone by here, this is just to make sure.
         bool ret = blocks.erase((size_t) id);
@@ -231,14 +255,23 @@ public:
     }
 
     pipeline::block_data getBlock(ax::NodeEditor::NodeId id) override {
+        if (!blocks.count((size_t) id)) {
+            return nullptr;
+        }
         return blocks[(size_t) id];
     }
 
     bool deleteLink(ax::NodeEditor::LinkId id) override {
+        if (isLocked()) {
+            return false;
+        }
         return linkHandler->deleteLink(id);
     }
 
     bool canConnect(ax::NodeEditor::PinId& a, ax::NodeEditor::PinId& b) override {
+        if (isLocked()) {
+            return false;
+        }
         auto ai = (size_t) a;
         ai = ai - (ai % 32);
         wrapped_block& ba = blocks[ai];
@@ -280,6 +313,9 @@ public:
     }
 
     bool connect(ax::NodeEditor::PinId a, ax::NodeEditor::PinId b) override {
+        if (isLocked()) {
+            return false;
+        }
         if (a == b || !canConnect(a, b)) {
             return false;
         }
@@ -311,6 +347,8 @@ private:
     std::map<size_t, wrapped_block> blocks;
     bool running = false;
     std::mutex startStopMutex;
+    bool broken = false;
+    bool ignoreFlag = false;
 
 };
 

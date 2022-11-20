@@ -67,6 +67,7 @@ public:
         ImGui::TextUnformatted("");
         ImGui::Text("SampleRate: %u sps", sampleData->sampleRate);
         ImGui::Text("Depth: %hu bits", bitDepth);
+        ImGui::Checkbox("File Rollover", &rollover);
 
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(500, 300))) {
             if (ImGuiFileDialog::Instance()->IsOk()) {
@@ -89,15 +90,22 @@ public:
     }
 
     void loop() override {
-        if (!data) {
+        if (!data || (!rollover && ended)) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             return;
+        }
+        if (rollover && ended) {
+            ended = false;
         }
         int samples = 1024 * 128;
         int elementSize = sizeof(int16_t) * 2;
         stream->write([&](utils::complex* dat) {
             auto len = fread(buf, elementSize, samples, file);
             if (len < samples) {
+                if (!rollover) {
+                    ended = true;
+                    return (int) len;
+                }
                 fseek(file, startPos, SEEK_SET);
                 fread(&buf[len], elementSize, samples - len, file);
             }
@@ -109,6 +117,7 @@ public:
     }
 
     void start() override {
+        ended = false;
         stream->start();
         pipeline::threaded_block::start();
     }
@@ -155,6 +164,8 @@ private:
     long startPos = 0;
     std::shared_ptr<file_data> data;
     dsp::IQConverter converter = nullptr;
+    bool rollover = false;
+    bool ended = false;
 
     int16_t* buf;
 

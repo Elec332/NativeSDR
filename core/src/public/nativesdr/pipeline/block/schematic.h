@@ -30,6 +30,12 @@ namespace pipeline {
 
         virtual void save(const std::filesystem::path& path) = 0;
 
+        virtual bool isBroken() = 0;
+
+        virtual void ignoreBroken() = 0;
+
+        virtual bool isLocked() = 0;
+
         virtual void forEachBlock(const std::function<void(const pipeline::block_data&)>& func) = 0;
 
         virtual void forEachBlock(const std::string& type, const std::function<void(const pipeline::block_data&)>& func) = 0;

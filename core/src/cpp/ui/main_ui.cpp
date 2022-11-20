@@ -64,21 +64,46 @@ public:
                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings |
                      ImGuiWindowFlags_NoBringToFrontOnFocus);
 
+        pipeline::schematic* schematic = *nm;
         drawMenuBar(actions);
         ImGui::PushID("top_row");
-        drawTopRow(*nm);
-        (*nm)->forEachBlock([&](const pipeline::block_data& w) {
+        drawTopRow(schematic);
+        schematic->forEachBlock([&](const pipeline::block_data& w) {
             w->getBlock()->drawDialogs();
         });
         ImGui::PopID();
 
         ImGui::BeginChild("Main");
         if (showEditor) {
-            editor.draw(*nm);
+            editor.draw(schematic);
         } else {
-            sdr.draw(*nm, context);
+            sdr.draw(schematic, context);
         }
         ImGui::EndChild();
+
+        if (ImGui::BeginPopupModal("Load Error", nullptr, ImGuiWindowFlags_NoScrollbar)) {
+            ImGui::Text("The saved schematic failed to load, most likely due to a missing module that provided one of the blocks for this schematic.\n"
+                        "Press \"Acknowledge\" to continue but lock the schematic, so nothing will change and it will still work when all blocks are present.\n"
+                        "Press \"Ignore\" to ignore the errors and remove the missing blocks and continue.");
+            if (ImGui::Button("Acknowledge")) {
+                brokenAck = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Ignore")) {
+                brokenAck = true;
+                schematic->ignoreBroken();
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        if ((size_t) schematic != ackRef) {
+            ackRef = (size_t) schematic;
+            brokenAck = false;
+        }
+        if (schematic->isBroken() && !brokenAck) {
+            ImGui::OpenPopup("Load Error");
+        }
 
         ImGui::End();
     }
@@ -210,7 +235,7 @@ public:
         drawFreqChooser();
     }
 
-    NativeGraphics * getBackend() override {
+    NativeGraphics* getBackend() override {
         return &context;
     }
 
@@ -257,6 +282,9 @@ private:
     std::string fileDir = ".";
 
     pipeline::connection_callback callback = nullptr;
+
+    bool brokenAck = false;
+    size_t ackRef = 0;
 
 };
 
