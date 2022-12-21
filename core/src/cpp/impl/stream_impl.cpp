@@ -13,9 +13,10 @@ class stream_impl : public pipeline::datastream<T> {
 
 public:
 
-    explicit stream_impl(int size) {
-        writeBuf = dsp::malloc(pipeline::BUFFER_COUNT * size);
-        readBuf = dsp::malloc(pipeline::BUFFER_COUNT * size);
+    explicit stream_impl(int size, size_t count) {
+        writeBuf = dsp::malloc(count * size);
+        readBuf = dsp::malloc(count * size);
+        bufCount = count;
     }
 
     ~stream_impl() {
@@ -28,7 +29,7 @@ public:
             return false;
         }
         int len = writer(writeBuf);
-        if (len > pipeline::BUFFER_COUNT) {
+        if (len > bufCount) {
             std::cout << ("Stream write too large! ") << readers << std::endl;
             throw std::runtime_error("Stream write too large!");
         }
@@ -122,10 +123,15 @@ public:
         writeWait.notify_all();
     }
 
+    [[nodiscard]] size_t getBufferCount() const override {
+        return bufCount;
+    }
+
 private:
 
     T* writeBuf;
     T* readBuf;
+    size_t bufCount = 0;
     int writeSize = 0;
 
     std::mutex writeMutex;
@@ -144,8 +150,8 @@ private:
 
 };
 
-pipeline::datastream<void>* pipeline::createUnknownStream(int size) {
-    return new stream_impl<void>(size);
+pipeline::datastream<void>* pipeline::createUnknownStream(int size, size_t count) {
+    return new stream_impl<void>(size, count);
 }
 
 void pipeline::deleteUnknownStream(pipeline::datastream<void>* stream) {

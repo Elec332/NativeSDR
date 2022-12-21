@@ -54,13 +54,20 @@ namespace pipeline {
         virtual void stop() = 0;
 
         /**
+         * Returns the maximum amount of elements in the stream buffer
+         *
+         * @return The maximum amount of elements in the stream buffer
+         */
+        virtual size_t getBufferCount() const = 0;
+
+        /**
          * Auxiliary stream data, type of data is dependant on the stream type "T".
          */
         void* auxData = nullptr;
 
     };
 
-    CORE_EXPORT datastream<void>* createUnknownStream(int size);
+    CORE_EXPORT datastream<void>* createUnknownStream(int size, size_t count);
 
     /**
      * Returns a new stream for the specified type.
@@ -70,7 +77,7 @@ namespace pipeline {
      */
     template<class T>
     datastream<T>* createStream() {
-        return (datastream<T>*) createUnknownStream(sizeof(T));
+        return (datastream<T>*) createUnknownStream(sizeof(T), BUFFER_COUNT);
     }
 
     CORE_EXPORT void deleteUnknownStream(datastream<void>* stream);

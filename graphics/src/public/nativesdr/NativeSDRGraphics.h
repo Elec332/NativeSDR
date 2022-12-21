@@ -117,6 +117,42 @@ namespace ImGui {
 
     GRAPHICS_EXPORT ImFont* AddDefaultFont(float size);
 
+    template<class T>
+    class ImComboList {
+
+    public:
+
+        void registerItem(T t, std::string name) {
+            names += name;
+            names += '\0';
+            list.emplace_back(std::move(t));
+        }
+
+        [[nodiscard]] const std::string& getAllNames() const {
+            return names;
+        }
+
+        T* getSelectedItemReference() {
+            return &list[index];
+        }
+
+        T getSelectedItem() {
+            return list[index];
+        }
+
+        int index = 0;
+
+    private:
+        std::vector<T> list;
+        std::string names;
+
+    };
+
+    template<class T>
+    inline bool ComboList(const char* label, ImComboList<T>* data, int popup_max_height_in_items = -1) {
+        return ImGui::Combo(label, &data->index, data->getAllNames().data(), popup_max_height_in_items);
+    }
+
 }
 
 namespace ImGui {
