@@ -6,7 +6,7 @@ addProject(LIB SHARED)
 installRuntime(DEV)
 setCentralOutput()
 
-setRunPath($ORIGIN)
+setRunPath(.:./lib)
 
 #findLibrary(fftw3f NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)
 findLibrary(fftw3f ALT FFTW3 NAME FFTW3 COMPONENTS fftw3f FILE libfftw3f-3 REQUIRED)

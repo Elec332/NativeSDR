@@ -6,6 +6,6 @@ addProject(EXECUTABLE)
 installRuntime(DEV DESTINATION ${CMAKE_INSTALL_PREFIX})
 setCentralOutput()
 
-setRunPath($ORIGIN/lib)
+setRunPath(.:./lib)
 
 useLibraries(NativeSDR::core PRIVATE)

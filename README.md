@@ -5,6 +5,7 @@ SDR stuff in C++
 ---
 
 ## Dependencies:
+You need git installed for the cmake scripts to work!
 
 > ### Windows/MinGW:
 >mingw-w64-x86_64-toolchain\
@@ -25,3 +26,13 @@ SDR stuff in C++
 > \
 > rtlsdr:x64-windows \
 > boost:x64-windows (For UHD/USRP)
+
+> ### Linux
+>libglfw3-dev\
+> libglew-dev\
+> libfftw3-dev\
+> libusb-1.0-0-dev\
+> libasound-dev\
+> libvolk2-dev\
+> libhackrf-dev\
+> 

@@ -21,7 +21,7 @@ public:
             return regc;
         }
         initialized = true;
-        regc = libusb_hotplug_register_callback(nullptr, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_NO_FLAGS, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY, usb_hotplug_callback, this, &cb_handler);
+        regc = libusb_hotplug_register_callback(nullptr, (libusb_hotplug_event) (LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_NO_FLAGS, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY, usb_hotplug_callback, this, &cb_handler);
         if (regc != LIBUSB_SUCCESS) {
             std::cout << "Failed to initialize LibUSB callbacks: " << libusb_error_name(regc) << std::endl;
             libusb_exit(nullptr);

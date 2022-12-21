@@ -7,6 +7,8 @@
 
 #include <functional>
 #include <mutex>
+#include <list>
+#include <memory>
 
 class USBHandler {
 

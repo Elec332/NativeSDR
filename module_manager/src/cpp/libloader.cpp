@@ -120,7 +120,7 @@ void libloader::loadFolder(std::list<libloader::library>& libs, const std::funct
             continue;
         }
         std::string name = dir_entry.path().string();
-        if (!endsWith(name, ".dll") && !endsWith(name, ".a")) {
+        if (!endsWith(name, ".dll") && !endsWith(name, ".a") && !endsWith(name, ".so")) {
             goto dirLoop;
         }
         for (const auto& l : libs) {
