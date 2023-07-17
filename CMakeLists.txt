@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(NativeSDR)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_STANDARD 14)
+set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_BASE_FOLDER ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/build/install")
@@ -18,11 +18,11 @@ set(EXPORT_HEADER_BASE_DIR nativesdr)
 
 
 findLibrary(libusb-1.0 FIND_HEADER libusb-1.0/libusb.h HEADER_DIR libusb-1.0 REQUIRED)
-findLibrary(pthreads ALT PThreads4W REQUIRED GLOBAL)
+findLibrary(Threads ALT PThreads4W REQUIRED NO_CONFIG GLOBAL)
 
 useLibraries(libusb-1.0 PRIVATE WIN_INSTALL / HEADER_INCLUDE_DIRS /)
 if(WIN32)
-    useLibraries(PThreads4W::PThreads4W PRIVATE WIN_INSTALL /)
+    useLibraries(Threads::Threads PRIVATE WIN_INSTALL /)
 endif()
 
 add_subdirectory(module_manager)

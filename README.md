@@ -35,4 +35,6 @@ You need git installed for the cmake scripts to work!
 > libasound-dev\
 > libvolk2-dev\
 > libhackrf-dev\
-> 
+> portaudio19-dev\
+> libuhd-dev\
+> uhd-host
