@@ -9,7 +9,8 @@
 #error Must include imgui.h before imgui_math.h
 #endif
 
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#ifndef IMGUI_DEFINE_MATH_OPERATORS_IMPLEMENTED
+#define IMGUI_DEFINE_MATH_OPERATORS_IMPLEMENTED
 
 static inline ImVec2 operator*(const ImVec2& lhs, const float rhs) {
     return {lhs.x * rhs, lhs.y * rhs};

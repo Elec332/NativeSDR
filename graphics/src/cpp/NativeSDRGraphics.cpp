@@ -401,7 +401,7 @@ void ImPlot::DrawImPlotChart(size_t id, const float* points, int pointCount, dou
     if (ImPlot::BeginPlot(str.c_str(), ImVec2(-1, 0), ImPlotFlags_NoInputs)) {
         ImPlot::SetupAxisLimits(ImAxis_Y1, -100, 0);
         if (xTags != nullptr) {
-            ImPlot::SetupAxisFormat(ImAxis_X1, formatTag, &xTags);
+            ImPlot::SetupAxisFormat(ImAxis_X1, (ImPlotFormatter) formatTag, &xTags);
         }
         ImPlot::SetupFinish();
         ImPlot::PlotLine(str.c_str(), points, pointCount);
