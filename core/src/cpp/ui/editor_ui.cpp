@@ -109,8 +109,8 @@ void editor_ui::draw(pipeline::schematic* nodes) {
                 }
             }
         }
+        ne::EndCreate();
     }
-    ne::EndCreate();
 
     if (ne::BeginDelete()) {
         ne::LinkId linkId = 0;
@@ -126,8 +126,8 @@ void editor_ui::draw(pipeline::schematic* nodes) {
                 nodes->deleteBlock(nodeId);
             }
         }
+        ne::EndDelete();
     }
-    ne::EndDelete();
 
     ne::Suspend();
     auto pos = ImGui::GetMousePos();
