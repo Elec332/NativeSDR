@@ -19,6 +19,8 @@ namespace dsp {
 
     CORE_EXPORT void free(void* ptr);
 
+    CORE_EXPORT size_t getAlignment();
+
 }
 
 #endif //NATIVESDR_MALLOC_H

@@ -150,3 +150,16 @@ void ImGui::DrawChartLine(const ImVec2& start, const ImVec2& end, const float* p
 void ImGui::DrawChartLineFilled(const ImVec2& start, const ImVec2& end, const float* points, int pointCount, const ImVec2& partsPerUnit, double yStart, ImU32 col, ImU32 colInside, bool inverted) {
     drawChartLines(start, end, points, pointCount, partsPerUnit, yStart, col, true, colInside, inverted);
 }
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+extern "C" {
+#include "nativesdr/stb/stb_image_write.h"
+}
+
+static void writeData(void* context, void* data, int size) {
+    (*(const fileWriter*) context)(data, size);
+}
+
+void writePNG(const fileWriter& wf, void* data, int width, int height, int channels, int size) {
+    stbi_write_png_to_func(writeData, (void*) &wf, width, height, channels, data, width * channels * size);
+}

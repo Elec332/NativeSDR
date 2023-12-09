@@ -37,8 +37,10 @@ public:
 
         std::list<ModulePointer> modules;
         libloader::loadFolder(libs, exec);
-        libloader::loadFolder(libs, exec / "lib");
 
+        if (!loadModules(libs, modules, exec / "lib", nullptr)) {
+            return -1;
+        }
         if (!loadModules(libs, modules, exec / "modules", nullptr)) {
             return -1;
         }
@@ -69,6 +71,7 @@ public:
             i->init(nodeManager, this);
             dealloc[i] = p.get();
         }
+        std::cout << "Loading config: " << exec / "start.json" << std::endl;
         currentSchematic = pipeline::newSchematic(nodeManager, exec / "start.json");
 
         window->start(&currentSchematic, this);
@@ -86,7 +89,7 @@ public:
         return 0;
     }
 
-    std::string getSDRRunDirectory() override {
+    [[nodiscard]] std::string getSDRRunDirectory() const override {
         return runDir;
     }
 

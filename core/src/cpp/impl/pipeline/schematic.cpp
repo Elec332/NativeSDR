@@ -113,6 +113,7 @@ public:
         json["links"] = links;
         std::ofstream file(pathS);
         file << json;
+        file.close();
     }
 
     void load() {

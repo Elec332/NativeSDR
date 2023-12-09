@@ -18,3 +18,7 @@ void* dsp::malloc(size_t length) {
 void dsp::free(void* ptr) {
     volk_free(ptr);
 }
+
+size_t dsp::getAlignment() {
+    return alignment;
+}

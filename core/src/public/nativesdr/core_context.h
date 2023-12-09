@@ -12,7 +12,7 @@ class SDRCoreContext {
 
 public:
 
-    virtual std::string getSDRRunDirectory() = 0;
+    [[nodiscard]] virtual std::string getSDRRunDirectory() const = 0;
 
     virtual NativeGraphicsInfo* getGraphicsInfo() = 0;
 

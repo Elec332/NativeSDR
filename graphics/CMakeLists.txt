@@ -15,8 +15,8 @@ add_compile_definitions(USE_STD_FILESYSTEM=)
 add_compile_definitions(CUSTOM_IMGUIFILEDIALOG_CONFIG=<nativesdr/graphics_export.h>)
 
 findLibrary(GLEW MODULE)
-#findLibrary(GLFW3 ALT glfw3 NAME glfw)
-findLibrary(glfw3 NAME glfw)
+findLibrary(GLFW3 ALT glfw3 NAME glfw)
+#findLibrary(glfw3 NAME glfw)
 useLibraries(NAMES glfw PRIVATE WIN_INSTALL /)
 useLibraries(NAMES GLEW::glew PUBLIC WIN_INSTALL / HEADER_INCLUDE_FILES gl/glew.h)
 
@@ -28,7 +28,7 @@ getRemoteLibrary(file_dialog GIT_REPO https://github.com/aiekick/ImGuiFileDialog
 
 useRemoteSource(stb stb
         PUBLIC_HEADER_DIR nativesdr/stb
-        PUBLIC_HEADER_FILES stb_image.h
+        PUBLIC_HEADER_FILES stb_image.h stb_image_write.h
         )
 useRemoteSource(implot implot
         PUBLIC_HEADER_DIR nativesdr/graphics

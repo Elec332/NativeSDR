@@ -204,6 +204,10 @@ bool NativeGraphics::hasShaderVersion(const std::string& version) const {
     return shaders.find(version) != shaders.end();
 }
 
+void NativeGraphics::closeWindow() {
+    glfwSetWindowShouldClose(window_GLFW, 1);
+}
+
 void ImGui::FocusCurrentWindow() {
     ImGui::FocusWindow(ImGui::GetCurrentWindow());
 }

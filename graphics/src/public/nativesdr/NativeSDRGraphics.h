@@ -49,6 +49,8 @@ public:
 
     std::shared_ptr<SubContext> createChildContext();
 
+    void closeWindow();
+
     void destroy();
 
     ImVec4* getClearColor();
@@ -187,5 +189,9 @@ static inline ImRect expandImRect(const ImRect& rect, float x, float y) {
 static inline bool isInArea(ImVec2 mouse, ImVec2 min, ImVec2 max) {
     return mouse.x >= min.x && mouse.x < max.x && mouse.y >= min.y && mouse.y < max.y;
 }
+
+typedef std::function<void(void* data, size_t size)> fileWriter;
+
+GRAPHICS_EXPORT void writePNG(const fileWriter& wf, void* data, int width, int height, int channels, int size = 1);
 
 #endif //NATIVESDR_NATIVESDRGRAPHICS_H

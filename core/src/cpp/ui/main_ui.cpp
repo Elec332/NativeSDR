@@ -95,6 +95,10 @@ public:
                 schematic->ignoreBroken();
                 ImGui::CloseCurrentPopup();
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Exit")) {
+                getBackend()->closeWindow();
+            }
             ImGui::EndPopup();
         }
         if ((size_t) schematic != ackRef) {
